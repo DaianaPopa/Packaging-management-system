@@ -1,24 +1,57 @@
-import { Search, Plus, Eye, Pencil, Building2, Mail, Phone } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Search, Eye, Pencil, Building2, Mail, Phone, Filter } from "lucide-react";
 
 function Customers() {
-  const customers = [];
+  const [customers, setCustomers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/customers/");
+      const data = await response.json();
+      setCustomers(data);
+    } catch (error) {
+      console.error("Error loading customers:", error);
+    }
+  };
+
+  const filteredCustomers = customers.filter((customer) =>
+    customer.company_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
       <div className="page-header">
-        <h2>Customers</h2>
-        <p>Manage customer information and linked products</p>
+        <div>
+          <h2>Customers</h2>
+          <p>Manage customer information and linked products</p>
+        </div>
       </div>
 
       <div className="filters-bar">
         <div className="search-box">
           <Search size={20} />
-          <input type="text" placeholder="Search customers..." />
+          <input
+            type="text"
+            placeholder="Search customers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
+        
 
-        <button className="new-product-btn">
-          Add Customer
+         <button className="filter-btn">
+         <Filter size={18} />Filters
         </button>
+
+        <Link to="/customers/new" className="new-product-btn">
+          Add Customer
+        </Link>
       </div>
 
       <div className="table-wrapper">
@@ -34,7 +67,7 @@ function Customers() {
           </thead>
 
           <tbody>
-            {customers.length === 0 ? (
+            {filteredCustomers.length === 0 ? (
               <tr>
                 <td colSpan="5" className="empty-state">
                   <div className="empty-icon">
@@ -45,55 +78,38 @@ function Customers() {
                 </td>
               </tr>
             ) : (
-              customers.map((customer) => (
+              filteredCustomers.map((customer) => (
                 <tr key={customer.id}>
-                  <td>{customer.name}</td>
+                  <td>{customer.company_name}</td>
+
                   <td>
-                    <Mail size={16} /> {customer.email}
+                    <span className="table-icon-cell">
+                      { customer.email || "—"}
+                    </span>
                   </td>
+
                   <td>
-                    <Phone size={16} /> {customer.phone}
+                    <span className="table-icon-cell">
+                      { customer.phone || "—"}
+                    </span>
                   </td>
-                  <td>{customer.products}</td>
+
+                  <td>{customer.products?.length || 0}</td>
+
                   <td className="actions">
-                    <Eye size={18} />
-                    <Pencil size={18} />
+                    <Link to={`/customers/${customer.id}`}>
+                      <Eye size={18} />
+                    </Link>
+
+                    <Link to={`/customers/${customer.id}?edit=true`}>
+                      <Pencil size={18} />
+                    </Link>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
-
-      <div className="customer-form-card">
-        <h3>Add New Customer</h3>
-
-        <div className="customer-form-grid">
-          <div className="form-group">
-            <label>Customer Name</label>
-            <input type="text" placeholder="Enter customer name" />
-          </div>
-
-          <div className="form-group">
-            <label>Email Address</label>
-            <input type="email" placeholder="Enter email address" />
-          </div>
-
-          <div className="form-group">
-            <label>Phone Number</label>
-            <input type="text" placeholder="Enter phone number" />
-          </div>
-
-          <div className="form-group">
-            <label>Address</label>
-            <input type="text" placeholder="Enter customer address" />
-          </div>
-        </div>
-
-        <button className="generate-btn">
-          Save Customer
-        </button>
       </div>
     </div>
   );

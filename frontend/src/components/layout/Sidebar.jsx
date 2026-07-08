@@ -1,4 +1,4 @@
-import { Package, FileText, Building2 } from 'lucide-react'
+import { Package, FileText, Building2,AlertTriangle } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 function Sidebar() {
@@ -9,15 +9,22 @@ function Sidebar() {
         <span>Products</span>
       </NavLink>
 
-      <NavLink to="/reports" className="sidebar-link">
-        <FileText size={22} />
-        <span>Reports</span>
-      </NavLink>
 
       <NavLink to="/customers" className="sidebar-link">
         <Building2 size={22} />
         <span>Customers</span>
       </NavLink>
+
+     <NavLink to="/jobprocessing" className="sidebar-link">
+        <FileText size={22} />
+        <span>Job Processing</span>
+      </NavLink>
+
+      <NavLink to="/reports" className="sidebar-link">
+        <AlertTriangle size={22} />
+        <span>Reports</span>
+      </NavLink>
+
     </aside>
   )
 }

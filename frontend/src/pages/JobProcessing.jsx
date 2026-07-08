@@ -1,19 +1,33 @@
 import { Table, ClipboardCheck, AlertTriangle, CalendarDays } from "lucide-react";
 
-function Reports() {
+function JobProcessing() {
   const reports = [
+    {
+      title: "Worksheet",
+      description: "DEKAPAK worksheet for job processing and pallet tracking",
+      icon: Table,
+    },
+    {
+      title: "Traceability",
+      description: "Track product components and supplier chain",
+      icon: ClipboardCheck,
+    },
     {
       title: "Reject Report",
       description: "Record packaging and product rejects with reasons",
       icon: AlertTriangle,
     },
-  
+    {
+      title: "Date Coding & Label Check",
+      description: "Verify date codes and labels on packaging",
+      icon: CalendarDays,
+    },
   ];
 
   return (
     <div>
       <div className="page-header">
-        <h2>Generate Report</h2>
+        <h2>Job Processing</h2>
         <p>Select the type of report you want to generate</p>
       </div>
 
@@ -61,4 +75,4 @@ function Reports() {
   );
 }
 
-export default Reports;
+export default JobProcessing;

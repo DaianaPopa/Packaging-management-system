@@ -1,5 +1,5 @@
 import Header from './Header'
-import Sidebar from './Sidebar'
+import Sidebar from './SideBar'
 
 function Layout({ children }) {
   return (
