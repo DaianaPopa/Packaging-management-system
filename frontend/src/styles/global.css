@@ -422,6 +422,108 @@ th {
   font-weight: 600;
 }
 
+/*  Sections  */
+
+.section-title {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #b30000;
+    color: #b30000;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/*  Component Cards  */
+
+.component-card {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.component-card h4 {
+    margin: 0 0 12px;
+    color: #444;
+}
+
+/*  Component Grid  */
+
+.component-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.component-grid input {
+    width: 100%;
+}
+
+/*  Textareas  */
+
+textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+    padding: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/*  Add Button */
+
+.add-btn {
+    margin-top: 12px;
+    margin-bottom: 20px;
+    padding: 8px 18px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-btn:hover {
+    background: #0069d9;
+}
+
+/*Small Delete Button  */
+
+.delete-btn-small {
+    margin-top: 10px;
+    padding: 6px 14px;
+    background: #c82333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.delete-btn-small:hover {
+    background: #a71d2a;
+}
+
+/*Better spacing*/
+
+.form-row {
+    margin-bottom: 15px;
+}
+
+.form-row label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-row input,
+.form-row select {
+    width: 100%;
+}
+
 /* Select input */
 
 .form-group select {

@@ -27,7 +27,7 @@ function ProductDetail() {
     issueDate: "",
     packingProcess: [],
     components: [],
-    packings: Array(6).fill(""),
+    packings: [],
   });
 
   // Load customers
@@ -56,7 +56,6 @@ function ProductDetail() {
           issueDate: product.issue_date || "",
           dateSetUp: product.date_set_up || "",
 
-          // ⭐ Correct field name from serializer
           packingProcess: product.packing_process || [],
 
           components: product.components || [],
@@ -310,34 +309,161 @@ function ProductDetail() {
           />
         </div>
 
-        <h3 className="section-title">Packing Process / Job Description</h3>
+        <div className="form-row">
+        <label>Suspend Record</label>
+
+        <div className="radio-group">
+          <label>
+            <input
+              type="radio"
+              checked={!formData.suspendRecord}
+              disabled={!isEditing}
+              onChange={() =>
+                setFormData(prev => ({
+                  ...prev,
+                  suspendRecord: false,
+                }))
+              }
+            />
+            No
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              checked={formData.suspendRecord}
+              disabled={!isEditing}
+              onChange={() =>
+                setFormData(prev => ({
+                  ...prev,
+                  suspendRecord: true,
+                }))
+              }
+            />
+            Yes
+          </label>
+        </div>
+      </div>
+
+      <div className="form-row">
+        <label>Transaction</label>
+
+        <select
+            value={formData.transaction}
+            disabled={!isEditing}
+            onChange={(e)=>
+                setFormData(prev=>({
+                    ...prev,
+                    transaction:e.target.value
+                }))
+            }
+        >
+            <option value="">Select Transaction</option>
+
+            <option value="machine">Machine Packed</option>
+            <option value="hand">Hand Packed</option>
+            <option value="mixed">Machine + Hand Packed</option>
+            <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div className="form-row">
+        <label>Issue</label>
+
+        <input
+          value={formData.issue}
+          disabled={!isEditing}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              issue: e.target.value,
+            }))
+          }
+        />
+      </div>
+
+      <div className="form-row">
+        <label>Issue Date</label>
+
+        <input
+          type="date"
+          value={formData.issueDate}
+          disabled={!isEditing}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              issueDate: e.target.value,
+            }))
+          }
+        />
+      </div>
+
+        <h3 className="section-title">Job Description</h3>
 
         {formData.packingProcess.map((step, index) => (
-          <div className="form-row" key={`packing-process-${index}`}>
-            <label>Step {step.step_number || index + 1}</label>
-            <input
+          <div className="form-row" key={`step-${index}`}>
+            <label>Job Description {index + 1}</label>
+
+            <textarea
+              rows="3"
               value={step.instruction || ""}
               disabled={!isEditing}
               onChange={(e) => {
                 const updated = [...formData.packingProcess];
-                updated[index] = {
-                  ...updated[index],
-                  instruction: e.target.value,
-                };
+                updated[index].instruction = e.target.value;
+
                 setFormData((prev) => ({
                   ...prev,
                   packingProcess: updated,
                 }));
               }}
             />
+
+            {isEditing && (
+              <button
+                type="button"
+                className="delete-btn-small"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    packingProcess: prev.packingProcess.filter(
+                      (_, i) => i !== index
+                    ),
+                  }));
+                }}
+              >
+                Delete
+              </button>
+            )}
           </div>
         ))}
+
+        {isEditing && (
+          <button
+            type="button"
+            className="add-btn"
+            onClick={() =>
+              setFormData((prev) => ({
+                ...prev,
+                packingProcess: [
+                  ...prev.packingProcess,
+                  {
+                    step_number: prev.packingProcess.length + 1,
+                    instruction: "",
+                  },
+                ],
+              }))
+            }
+          >
+            + Add Job Description
+          </button>
+        )}
 
         <h3 className="section-title">Components</h3>
 
         {formData.components.map((component, index) => (
-          <div className="form-row" key={`component-${index}`}>
-            <label>Component {index + 1}</label>
+          <div className="component-card" key={index}>
+            <h4>Component {index + 1}</h4>
 
             <div className="component-grid">
               <input
@@ -346,11 +472,27 @@ function ProductDetail() {
                 disabled={!isEditing}
                 onChange={(e) => {
                   const updated = [...formData.components];
-                  updated[index] = {
-                    ...updated[index],
-                    component_sku: e.target.value,
-                  };
-                  setFormData((prev) => ({ ...prev, components: updated }));
+                  updated[index].component_sku = e.target.value;
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    components: updated,
+                  }));
+                }}
+              />
+
+              <input
+                placeholder="Component Name"
+                value={component.component_name || ""}
+                disabled={!isEditing}
+                onChange={(e) => {
+                  const updated = [...formData.components];
+                  updated[index].component_name = e.target.value;
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    components: updated,
+                  }));
                 }}
               />
 
@@ -360,11 +502,12 @@ function ProductDetail() {
                 disabled={!isEditing}
                 onChange={(e) => {
                   const updated = [...formData.components];
-                  updated[index] = {
-                    ...updated[index],
-                    supplier: e.target.value,
-                  };
-                  setFormData((prev) => ({ ...prev, components: updated }));
+                  updated[index].supplier = e.target.value;
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    components: updated,
+                  }));
                 }}
               />
 
@@ -374,11 +517,12 @@ function ProductDetail() {
                 disabled={!isEditing}
                 onChange={(e) => {
                   const updated = [...formData.components];
-                  updated[index] = {
-                    ...updated[index],
-                    units_per_piece: e.target.value,
-                  };
-                  setFormData((prev) => ({ ...prev, components: updated }));
+                  updated[index].units_per_piece = e.target.value;
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    components: updated,
+                  }));
                 }}
               />
 
@@ -388,33 +532,113 @@ function ProductDetail() {
                 disabled={!isEditing}
                 onChange={(e) => {
                   const updated = [...formData.components];
-                  updated[index] = {
-                    ...updated[index],
-                    units_per_outer: e.target.value,
-                  };
-                  setFormData((prev) => ({ ...prev, components: updated }));
+                  updated[index].units_per_outer = e.target.value;
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    components: updated,
+                  }));
                 }}
               />
             </div>
+
+            {isEditing && (
+              <button
+                type="button"
+                className="delete-btn-small"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    components: prev.components.filter((_, i) => i !== index),
+                  }))
+                }
+              >
+                Delete Component
+              </button>
+            )}
           </div>
         ))}
+
+        {isEditing && (
+          <button
+            type="button"
+            className="add-btn"
+            onClick={() =>
+              setFormData((prev) => ({
+                ...prev,
+                components: [
+                  ...prev.components,
+                  {
+                    component_sku: "",
+                    component_name: "",
+                    supplier: "",
+                    units_per_piece: "",
+                    units_per_outer: "",
+                  },
+                ],
+              }))
+            }
+          >
+            + Add Component
+          </button>
+        )}
 
         <h3 className="section-title">Packing Fields</h3>
 
         {formData.packings.map((packing, index) => (
-          <div className="form-row" key={`packing-${index}`}>
+          <div className="form-row" key={index}>
             <label>Packing {index + 1}</label>
+
             <input
               value={packing}
               disabled={!isEditing}
               onChange={(e) => {
                 const updated = [...formData.packings];
                 updated[index] = e.target.value;
-                setFormData((prev) => ({ ...prev, packings: updated }));
+
+                setFormData((prev) => ({
+                  ...prev,
+                  packings: updated,
+                }));
               }}
             />
+
+            {isEditing && (
+              <button
+                type="button"
+                className="delete-btn-small"
+                onClick={() => {
+                  const updated = formData.packings.filter((_, i) => i !== index);
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    packings: updated,
+                  }));
+                }}
+              >
+                Delete
+              </button>
+            )}
           </div>
         ))}
+
+        {isEditing && (
+          <button
+            type="button"
+            className="add-btn"
+            onClick={() =>
+              setFormData((prev) => ({
+                ...prev,
+                packings: [...prev.packings, ""],
+              }))
+            }
+          >
+            + Add Packing
+          </button>
+        )}
+            {/* />
+          </div>
+        ))} */}
       </form>
     </div>
   );
