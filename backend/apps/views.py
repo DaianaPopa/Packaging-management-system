@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
 from .models import (
     Customer,
@@ -20,6 +20,7 @@ from .serializers import (
 )
 
 import openpyxl
+import json
 
 
 # ---------------------------------------------------------
@@ -36,12 +37,14 @@ class CustomerViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by("sku")
     serializer_class = ProductSerializer
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (JSONParser, MultiPartParser, FormParser)
 
     @action(detail=False, methods=["post"], url_path="create-with-file")
     def create_with_file(self, request):
-        temp_file_id = request.data.get("temp_file_id")
 
+        print("DEBUG REQUEST DATA:", request.data)
+
+        temp_file_id = request.data.get("temp_file_id")
         if not temp_file_id:
             return Response({"error": "temp_file_id is required"}, status=400)
 
@@ -50,9 +53,30 @@ class ProductViewSet(viewsets.ModelViewSet):
             temp_file = UploadedFile.objects.get(id=temp_file_id)
         except UploadedFile.DoesNotExist:
             return Response({"error": "Temporary file not found"}, status=404)
+        
+        print("DATE:", request.data.get("date_set_up"))
+        print("CUSTOMER:", request.data.get("customer"))
+        print("SKU:", request.data.get("sku"))
+        print("TEMP FILE:", request.data.get("temp_file_id"))
+        print("FULL REQUEST:", request.data)
+
+        # Build product data explicitly
+        product_data = {
+            "customer": request.data.get("customer"),
+            "sku": request.data.get("sku"),
+            "name": request.data.get("name"),
+            "description": request.data.get("description", ""),
+            "transaction": request.data.get("transaction", ""),
+            "pallet_configuration": request.data.get("pallet_configuration", ""),
+            "date_set_up": request.data.get("date_set_up"),
+            "issue": request.data.get("issue", ""),
+            "issue_date": request.data.get("issue_date"),
+            "inner_barcode": request.data.get("inner_barcode", ""),
+            "outer_barcode": request.data.get("outer_barcode", ""),
+        }
 
         # Create product
-        product_serializer = ProductSerializer(data=request.data)
+        product_serializer = ProductSerializer(data=product_data)
         product_serializer.is_valid(raise_exception=True)
         product = product_serializer.save()
 
@@ -67,28 +91,42 @@ class ProductViewSet(viewsets.ModelViewSet):
             version="V1",
             units_per_outer=request.data.get("units_per_outer", 0),
             ti=request.data.get("ti", 0),
-            hi=request.data.get("hi", 0)
+            hi=request.data.get("hi", 0),
         )
 
-        # Save Components
-        components = request.data.get("components", [])
+        # ---------------------------------------------------------
+        # COMPONENTS (JSON DECODE FIX)
+        # ---------------------------------------------------------
+        components_raw = request.data.get("components")
+        try:
+            components = json.loads(components_raw) if components_raw else []
+        except json.JSONDecodeError:
+            components = []
+
         for comp in components:
             Component.objects.create(
                 packaging_specification=spec,
-                component_sku=comp.get("component_sku", ""),
-                component_name=comp.get("component_name", ""),
-                supplier=comp.get("supplier", ""),
-                units_per_piece=comp.get("units_per_piece", ""),
-                units_per_outer=comp.get("units_per_outer", "")
+                component_sku=comp.get("component_sku") or "",
+                component_name=comp.get("component_name") or "",
+                supplier=comp.get("supplier") or "",
+                units_per_piece=comp.get("units_per_piece") or "",
+                units_per_outer=comp.get("units_per_outer") or "",
             )
 
-        # Save Packing Steps
-        steps = request.data.get("steps", [])
+        # ---------------------------------------------------------
+        # PACKING STEPS (JSON DECODE FIX)
+        # ---------------------------------------------------------
+        steps_raw = request.data.get("steps")
+        try:
+            steps = json.loads(steps_raw) if steps_raw else []
+        except json.JSONDecodeError:
+            steps = []
+
         for step in steps:
             PackingProcessStep.objects.create(
                 packaging_specification=spec,
-                step_number=step.get("step_number"),
-                instruction=step.get("instruction", "")
+                step_number=step.get("step_number") or 0,
+                instruction=step.get("instruction") or "",
             )
 
         return Response(ProductSerializer(product).data, status=201)
@@ -131,6 +169,8 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
         wb = openpyxl.load_workbook(file_path, data_only=True)
         sheet = wb.active
 
+        rows = list(sheet.iter_rows(values_only=True))
+
         data = {
             "sku": "",
             "name": "",
@@ -143,76 +183,165 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
             "steps": []
         }
 
-        rows = list(sheet.iter_rows(values_only=True))
+        # -------------------------------------------------------
+        # PRODUCT INFORMATION
+        # -------------------------------------------------------
+         # --------------------------------------------------
 
-        # PRODUCT HEADER
-        header_row = None
         for row in rows:
-            if row and "SKU" in [str(c).strip() for c in row if c]:
-                header_row = row
-                break
 
-        if header_row:
-            header_index = rows.index(header_row)
-            values_row = rows[header_index + 1]
-            headers = [str(h).strip().upper() for h in header_row]
-
-            for i, header in enumerate(headers):
-                value = values_row[i] if i < len(values_row) else ""
-
-                if header == "PRODUCT":
-                    data["name"] = value
-                elif header == "SKU":
-                    data["sku"] = value
-                elif header == "INNER BARCODE":
-                    data["inner_barcode"] = value
-                elif header == "OUTER BARCODE":
-                    data["outer_barcode"] = value
-                elif header == "UNITS PER OUTER":
-                    data["units_per_outer"] = value
-                elif header == "TI":
-                    data["ti"] = value
-                elif header == "HI":
-                    data["hi"] = value
-
-        # COMPONENTS
-        components_started = False
-        for row in rows:
             if not row:
                 continue
 
-            if ("SKU" in str(row[0]).upper() and "COMPONENT" in str(row[1]).upper()):
+            first = str(row[0]).strip() if row[0] else ""
+
+            if first.upper() == "COMPONENTS":
+                break
+
+            value = None
+            for cell in row[1:]:
+                if cell not in ("", None):
+                    value = cell
+                    break
+
+            key = first.upper()
+
+            if key == "PRODUCT":
+                data["name"] = str(value)
+
+            elif key == "SKU":
+                data["sku"] = str(value)
+
+            elif key == "INNER BARCODE":
+                data["inner_barcode"] = str(value)
+
+            elif key == "OUTER BARCODE":
+                data["outer_barcode"] = str(value)
+
+            elif key == "UNITS PER OUTER":
+                data["units_per_outer"] = value
+
+            elif key == "TI":
+                data["ti"] = value
+
+            elif key == "HI":
+                data["hi"] = value
+
+        print("PRODUCT DATA:", data)
+        # -------------------------------------------------------
+        # COMPONENTS
+        # -------------------------------------------------------
+        components_started = False
+
+        for row in rows:
+
+            if not row:
+                continue
+
+            first = str(row[0]).strip().upper() if row[0] else ""
+
+            # Find header
+            if first == "SKU" and len(row) > 1 and row[1] and "COMPONENT" in str(row[1]).upper():
                 components_started = True
                 continue
 
-            if components_started:
-                if str(row[0]).strip().isdigit():
-                    break
+            if not components_started:
+                continue
 
-                sku = row[0]
-                supplier = row[2]
+            # Stop at packing process
+            if first == "PACKING PROCESS":
+                break
 
-                if sku:
-                    data["components"].append({
-                        "component_sku": sku,
-                        "supplier": supplier
-                    })
+            if row[0] in ("", None):
+                continue
 
-        # PACKING STEPS
+            component = {
+                "component_sku": str(row[0]).strip(),
+                "component_name": str(row[1]).strip() if len(row) > 1 and row[1] else "",
+                "supplier": "",
+                "units_per_piece": "",
+                "units_per_outer": ""
+            }
+
+            # Find supplier
+            for cell in row:
+                if cell is None:
+                    continue
+
+                text = str(cell).strip()
+
+                if text.upper() in [
+                    "TMBC",
+                    "PACKING SITE",
+                    "MONDELEZ",
+                    "STOCK",
+                    "Honeycomb",
+                    "N/A"
+                ]:
+                    component["supplier"] = text
+
+            # Last two populated cells = Units/Piece & Units/Outer
+            values = [c for c in row if c not in ("", None)]
+
+            if len(values) >= 2:
+                component["units_per_outer"] = values[-1]
+
+            if len(values) >= 3:
+                component["units_per_piece"] = values[-2]
+
+            data["components"].append(component)
+
+        # -------------------------------------------------------
+        # PACKING PROCESS
+        # -------------------------------------------------------
         steps_started = False
+        current_step = None
+
         for row in rows:
+
             if not row:
                 continue
 
-            if str(row[0]).strip().upper() == "PACKING PROCESS":
+            first = str(row[0]).strip() if row[0] else ""
+
+            if first.upper() == "PACKING PROCESS":
                 steps_started = True
                 continue
 
-            if steps_started and str(row[0]).strip().isdigit():
-                data["steps"].append({
-                    "step_number": int(row[0]),
-                    "instruction": row[1]
-                })
+            if not steps_started:
+                continue
+
+            # New step
+            if first.isdigit():
+
+                instruction = ""
+
+                for cell in row[1:]:
+                    if cell not in ("", None):
+                        instruction = str(cell).strip()
+                        break
+
+                current_step = {
+                    "step_number": int(first),
+                    "instruction": instruction
+                }
+
+                data["steps"].append(current_step)
+
+            # Continuation line
+            else:
+
+                if current_step:
+
+                    continuation = ""
+
+                    for cell in row:
+                        if cell not in ("", None):
+                            continuation = str(cell).strip()
+                            break
+
+                    if continuation:
+                        current_step["instruction"] += "\n" + continuation
 
         return data
 

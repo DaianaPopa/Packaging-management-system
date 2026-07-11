@@ -103,12 +103,27 @@ class PackagingSpecificationSerializer(serializers.ModelSerializer):
 
 
 # ---------------------------------------------------------
-# PRODUCT
+# PRODUCT (FULLY FIXED)
 # ---------------------------------------------------------
 class ProductSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source="customer.company_name", read_only=True)
     files = UploadedFileSerializer(many=True, read_only=True)
     packaging_specifications = PackagingSpecificationSerializer(many=True, read_only=True)
+
+    components = serializers.SerializerMethodField()
+    packing_process = serializers.SerializerMethodField()
+
+    def get_components(self, obj):
+        spec = obj.packaging_specifications.first()
+        if not spec:
+            return []
+        return ComponentSerializer(spec.components.all(), many=True).data
+
+    def get_packing_process(self, obj):
+        spec = obj.packaging_specifications.first()
+        if not spec:
+            return []
+        return PackingProcessStepSerializer(spec.packing_process_steps.all(), many=True).data
 
     class Meta:
         model = Product
@@ -137,6 +152,21 @@ class ProductSerializer(serializers.ModelSerializer):
             "files",
             "packaging_specifications",
 
+            "components",
+            "packing_process",
+
             "created_at",
             "updated_at",
         ]
+
+        # ⭐ THIS FIXES YOUR 400 ERROR
+        extra_kwargs = {
+            "description": {"required": False, "allow_blank": True},
+            "transaction": {"required": False, "allow_blank": True},
+            "inner_barcode": {"required": False, "allow_blank": True},
+            "outer_barcode": {"required": False, "allow_blank": True},
+            "pallet_configuration": {"required": False, "allow_blank": True},
+            "issue": {"required": False, "allow_blank": True},
+            "issue_date": {"required": False, "allow_null": True},
+            "date_set_up": {"required": False, "allow_null": True},
+        }

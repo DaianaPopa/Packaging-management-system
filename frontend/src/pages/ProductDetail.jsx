@@ -45,18 +45,21 @@ function ProductDetail() {
       .then((res) => res.json())
       .then((product) => {
         setFormData((prev) => ({
-            ...prev,
-            productCode: product.sku || "",
-            customer: product.customer || "",
-            productDescription: product.name || "",
-            productNotes: product.description || "",
-            transaction: product.transaction || "",
-            palletisationStatistics: product.pallet_configuration || "",
-            issue: product.issue || "",
-            issueDate: product.issue_date || "",
-            dateSetUp: product.date_set_up || "",
-            components: product.components || [],
-            packingProcess: product.steps || []
+          ...prev,
+          productCode: product.sku || "",
+          customer: product.customer || "",
+          productDescription: product.name || "",
+          productNotes: product.description || "",
+          transaction: product.transaction || "",
+          palletisationStatistics: product.pallet_configuration || "",
+          issue: product.issue || "",
+          issueDate: product.issue_date || "",
+          dateSetUp: product.date_set_up || "",
+
+          // ⭐ Correct field name from serializer
+          packingProcess: product.packing_process || [],
+
+          components: product.components || [],
         }));
       });
   }, [id, isNewProduct]);
@@ -89,7 +92,7 @@ function ProductDetail() {
       setTempFileId(temp_file_id);
 
       // Auto-fill form with extracted data
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         productCode: extracted.sku || "",
         productDescription: extracted.name || "",
@@ -102,10 +105,9 @@ function ProductDetail() {
       console.error("File upload error:", error);
       alert("Error uploading file. Please check the console for details.");
     }
-
   };
 
-  // Save product
+  // Save product (multipart/form-data)
   const handleSave = async (e) => {
     e.preventDefault();
 
@@ -114,28 +116,35 @@ function ProductDetail() {
       return;
     }
 
-    const payload = {
-        customer: formData.customer,
-        sku: formData.productCode,
-        name: formData.productDescription,
-        description: formData.productNotes,
-        transaction: formData.transaction,
-        pallet_configuration: formData.palletisationStatistics,
-        temp_file_id: tempFileId,
-        components: formData.components,
-        steps: formData.packingProcess,
-      };
+    const fd = new FormData();
+
+    fd.append("customer", formData.customer);
+    fd.append("sku", formData.productCode);
+    fd.append("name", formData.productDescription);
+    fd.append("description", formData.productNotes);
+    fd.append("transaction", formData.transaction);
+    fd.append("pallet_configuration", formData.palletisationStatistics);
+    fd.append("date_set_up", formData.dateSetUp);
+    fd.append("issue", formData.issue);
+    fd.append("issue_date", formData.issueDate);
+
+    fd.append("temp_file_id", tempFileId);
+
+    // ⭐ MUST be JSON strings
+    fd.append("components", JSON.stringify(formData.components));
+    fd.append("steps", JSON.stringify(formData.packingProcess));
 
     const response = await fetch(
       "http://127.0.0.1:8000/api/products/create-with-file/",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: fd, // ⭐ No headers
       }
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.log("Save error:", errorText);
       alert("Error saving product.");
       return;
     }
@@ -304,25 +313,25 @@ function ProductDetail() {
         <h3 className="section-title">Packing Process / Job Description</h3>
 
         {formData.packingProcess.map((step, index) => (
-            <div className="form-row" key={`packing-process-${index}`}>
-              <label>Step {step.step_number || index + 1}</label>
-              <input
-                value={step.instruction || ""}
-                disabled={!isEditing}
-                onChange={(e) => {
-                  const updated = [...formData.packingProcess];
-                  updated[index] = {
-                    ...updated[index],
-                    instruction: e.target.value,
-                  };
-                  setFormData((prev) => ({
-                    ...prev,
-                    packingProcess: updated,
-                  }));
-                }}
-              />
-            </div>
-          ))}
+          <div className="form-row" key={`packing-process-${index}`}>
+            <label>Step {step.step_number || index + 1}</label>
+            <input
+              value={step.instruction || ""}
+              disabled={!isEditing}
+              onChange={(e) => {
+                const updated = [...formData.packingProcess];
+                updated[index] = {
+                  ...updated[index],
+                  instruction: e.target.value,
+                };
+                setFormData((prev) => ({
+                  ...prev,
+                  packingProcess: updated,
+                }));
+              }}
+            />
+          </div>
+        ))}
 
         <h3 className="section-title">Components</h3>
 
