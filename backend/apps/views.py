@@ -228,6 +228,7 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
                 data["hi"] = value
 
         print("PRODUCT DATA:", data)
+
         # -------------------------------------------------------
         # COMPONENTS
         # -------------------------------------------------------
@@ -255,39 +256,16 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
             if row[0] in ("", None):
                 continue
 
+            # Remove empty cells while preserving order
+            values = [str(c).strip() for c in row if c not in ("", None)]
+
             component = {
-                "component_sku": str(row[0]).strip(),
-                "component_name": str(row[1]).strip() if len(row) > 1 and row[1] else "",
-                "supplier": "",
-                "units_per_piece": "",
-                "units_per_outer": ""
+                "component_sku": values[0] if len(values) > 0 else "",
+                "component_name": values[1] if len(values) > 1 else "",
+                "supplier": values[2] if len(values) > 2 else "",
+                "units_per_piece": values[-2] if len(values) >= 4 else "",
+                "units_per_outer": values[-1] if len(values) >= 5 else "",
             }
-
-            # Find supplier
-            for cell in row:
-                if cell is None:
-                    continue
-
-                text = str(cell).strip()
-
-                if text.upper() in [
-                    "TMBC",
-                    "PACKING SITE",
-                    "MONDELEZ",
-                    "STOCK",
-                    "Honeycomb",
-                    "N/A"
-                ]:
-                    component["supplier"] = text
-
-            # Last two populated cells = Units/Piece & Units/Outer
-            values = [c for c in row if c not in ("", None)]
-
-            if len(values) >= 2:
-                component["units_per_outer"] = values[-1]
-
-            if len(values) >= 3:
-                component["units_per_piece"] = values[-2]
 
             data["components"].append(component)
 

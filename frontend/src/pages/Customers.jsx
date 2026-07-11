@@ -94,7 +94,7 @@ function Customers() {
                     </span>
                   </td>
 
-                  <td>{customer.products?.length || 0}</td>
+                  <td>{customer.product_count || 0}</td>
 
                   <td className="actions">
                     <Link to={`/customers/${customer.id}`}>

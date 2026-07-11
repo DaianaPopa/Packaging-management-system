@@ -137,7 +137,7 @@ function ProductDetail() {
       "http://127.0.0.1:8000/api/products/create-with-file/",
       {
         method: "POST",
-        body: fd, // ⭐ No headers
+        body: fd, 
       }
     );
 
