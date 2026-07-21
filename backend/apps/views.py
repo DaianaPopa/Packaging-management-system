@@ -524,6 +524,60 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
 
         return data
 
+# ---------------------------------------------------------
+# TRACEABILITY DATA
+# ---------------------------------------------------------
+
+@api_view(["GET"])
+def traceability_data(request):
+
+    customer_id = request.GET.get("customer")
+    product_id = request.GET.get("product")
+    report_date = request.GET.get("date")
+
+    try:
+        customer = Customer.objects.get(id=customer_id)
+        product = Product.objects.get(id=product_id)
+
+    except Customer.DoesNotExist:
+        return Response(
+            {"error": "Customer not found"},
+            status=404
+        )
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    packaging_spec = (
+        PackagingSpecification.objects
+        .filter(product=product)
+        .order_by("-id")
+        .first()
+    )
+
+    component_data = []
+
+    if packaging_spec:
+
+        component_data = [
+            {
+                "id": component.id,
+                "component_sku": component.component_sku,
+                "component_name": component.component_name,
+            }
+            for component in packaging_spec.components.all()
+        ]
+
+    return Response({
+        "customer": customer.company_name,
+        "product": product.name,
+        "sku": product.sku,
+        "date": report_date,
+        "components": component_data,
+    })
 
 # ---------------------------------------------------------
 # PACKAGING SPECIFICATION VIEWSET

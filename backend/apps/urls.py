@@ -1,7 +1,7 @@
 from rest_framework.routers import DefaultRouter
 from .views import CustomerViewSet, PackagingSpecificationViewSet, ProductViewSet, UploadedFileViewSet
 from django.urls import path
-from .views import worksheet_data, reject_report_data, checksheet_data, stocktake_data
+from .views import worksheet_data, reject_report_data, checksheet_data, stocktake_data,traceability_data
 
 router = DefaultRouter()
 router.register("customers", CustomerViewSet, basename="customer")
@@ -30,5 +30,9 @@ urlpatterns = router.urls + [
         "job-processing/stocktake/",
         stocktake_data,
         name="stocktake-data",
+    ),
+    path(
+    "job-processing/traceability/",
+    traceability_data
     ),
 ]
