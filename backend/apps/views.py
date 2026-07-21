@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
@@ -21,7 +21,187 @@ from .serializers import (
 
 import openpyxl
 import json
+from rest_framework.decorators import api_view
 
+
+# ---------------------------------------------------------
+# WORKSHEET DATA
+# ---------------------------------------------------------
+@api_view(["GET"])
+def worksheet_data(request):
+
+    customer_id = request.GET.get("customer")
+    product_id = request.GET.get("product")
+    report_date = request.GET.get("date")
+
+    try:
+        customer = Customer.objects.get(id=customer_id)
+        product = Product.objects.get(id=product_id)
+
+        specification = PackagingSpecification.objects.get(product=product)
+
+        steps = PackingProcessStep.objects.filter(
+            packaging_specification=specification
+        ).order_by("step_number")
+
+    except Customer.DoesNotExist:
+        return Response({"error": "Customer not found"}, status=404)
+
+    except Product.DoesNotExist:
+        return Response({"error": "Product not found"}, status=404)
+
+    except PackagingSpecification.DoesNotExist:
+        return Response({"error": "Packaging specification not found"}, status=404)
+
+    return Response({
+
+        "customer": customer.company_name,
+
+        "product": product.name,
+
+        "sku": product.sku,
+
+        "transaction": product.get_transaction_display(),
+
+        "pallet_configuration": product.pallet_configuration,
+
+        "date": report_date,
+
+        "steps": [
+
+            {
+                "step_number": s.step_number,
+                "instruction": s.instruction
+            }
+
+            for s in steps
+
+        ]
+
+    })
+
+
+# ---------------------------------------------------------
+# REJECT REPORT DATA
+# ---------------------------------------------------------
+@api_view(["GET"])
+def reject_report_data(request):
+
+    customer_id = request.GET.get("customer")
+    product_id = request.GET.get("product")
+    report_date = request.GET.get("date")
+
+    try:
+        customer = Customer.objects.get(id=customer_id)
+        product = Product.objects.get(id=product_id)
+
+    except Customer.DoesNotExist:
+        return Response({"error": "Customer not found"}, status=404)
+
+    except Product.DoesNotExist:
+        return Response({"error": "Product not found"}, status=404)
+
+    return Response({
+
+        "customer": customer.company_name,
+
+        "product": product.name,
+
+        "sku": product.sku,
+
+        "date": report_date,
+
+    })
+
+
+# ---------------------------------------------------------
+# CHECKSHEET DATA
+# ---------------------------------------------------------
+@api_view(["GET"])
+def checksheet_data(request):
+
+    customer_id = request.GET.get("customer")
+    product_id = request.GET.get("product")
+    report_date = request.GET.get("date")
+
+    try:
+        customer = Customer.objects.get(id=customer_id)
+        product = Product.objects.get(id=product_id)
+
+    except Customer.DoesNotExist:
+        return Response({"error": "Customer not found"}, status=404)
+
+    except Product.DoesNotExist:
+        return Response({"error": "Product not found"}, status=404)
+
+    return Response({
+
+        "customer": customer.company_name,
+
+        "product": product.name,
+
+        "sku": product.sku,
+
+        "date": report_date,
+
+    })
+
+# ---------------------------------------------------------
+# STOCKTAKE DATA
+# ---------------------------------------------------------
+@api_view(["GET"])
+def stocktake_data(request):
+
+    customer_id = request.GET.get("customer")
+    product_id = request.GET.get("product")
+    report_date = request.GET.get("date")
+
+    try:
+        customer = Customer.objects.get(id=customer_id)
+        product = Product.objects.get(id=product_id)
+
+    except Customer.DoesNotExist:
+        return Response(
+            {"error": "Customer not found"},
+            status=404
+        )
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    packaging_spec = (
+        PackagingSpecification.objects
+        .filter(product=product)
+        .order_by("-id")
+        .first()
+    )
+
+    component_data = []
+
+    if packaging_spec:
+
+        component_data = [
+            {
+                "id": component.id,
+                "component_sku": component.component_sku,
+                "component_name": component.component_name,
+                "supplier": component.supplier,
+                "units_per_piece": component.units_per_piece,
+                "units_per_outer": component.units_per_outer,
+            }
+            for component in packaging_spec.components.all()
+        ]
+
+    return Response({
+        "customer": customer.company_name,
+        "product": product.name,
+        "sku": product.sku,
+        "date": report_date,
+        "components": component_data,
+    })
 
 # ---------------------------------------------------------
 # CUSTOMER VIEWSET
@@ -35,14 +215,27 @@ class CustomerViewSet(viewsets.ModelViewSet):
 # PRODUCT VIEWSET
 # ---------------------------------------------------------
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all().order_by("sku")
+    #queryset = Product.objects.all().order_by("sku")
     serializer_class = ProductSerializer
     parser_classes = (JSONParser, MultiPartParser, FormParser)
 
+    def get_queryset(self):
+
+            queryset = Product.objects.all().order_by("sku")
+
+            customer_id = self.request.query_params.get(
+                "customer"
+            )
+
+            if customer_id:
+                queryset = queryset.filter(
+                    customer_id=customer_id
+                )
+
+            return queryset
+
     @action(detail=False, methods=["post"], url_path="create-with-file")
     def create_with_file(self, request):
-
-        print("DEBUG REQUEST DATA:", request.data)
 
         temp_file_id = request.data.get("temp_file_id")
         if not temp_file_id:
@@ -53,12 +246,6 @@ class ProductViewSet(viewsets.ModelViewSet):
             temp_file = UploadedFile.objects.get(id=temp_file_id)
         except UploadedFile.DoesNotExist:
             return Response({"error": "Temporary file not found"}, status=404)
-        
-        print("DATE:", request.data.get("date_set_up"))
-        print("CUSTOMER:", request.data.get("customer"))
-        print("SKU:", request.data.get("sku"))
-        print("TEMP FILE:", request.data.get("temp_file_id"))
-        print("FULL REQUEST:", request.data)
 
         # Build product data explicitly
         product_data = {
@@ -130,6 +317,22 @@ class ProductViewSet(viewsets.ModelViewSet):
             )
 
         return Response(ProductSerializer(product).data, status=201)
+   
+    @action(detail=False, methods=["get"], url_path="by-customer")
+    def by_customer(self, request):
+
+        customer_id = request.GET.get("customer")
+
+        products = Product.objects.filter(
+            customer_id=customer_id
+        ).order_by("sku")
+
+        serializer = self.get_serializer(
+            products,
+            many=True
+        )
+
+        return Response(serializer.data)
 
 
 # ---------------------------------------------------------
@@ -226,8 +429,6 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
 
             elif key == "HI":
                 data["hi"] = value
-
-        print("PRODUCT DATA:", data)
 
         # -------------------------------------------------------
         # COMPONENTS

@@ -1,2 +1,2 @@
 # Packaging-management-system
-Django apps
+Django/React apps
