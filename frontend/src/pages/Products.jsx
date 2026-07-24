@@ -1,10 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Eye, Pencil, Package, Filter } from "lucide-react";
+import {
+  Search,
+  Eye,
+  Pencil,
+  Package,
+} from "lucide-react";
+
+import SearchBar from "../components/common/SearchBar";
 
 function Products() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const [activeFilters, setActiveFilters] = useState({
+    customer: "",
+    product: "",
+    transaction: "",
+    date: "",
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -12,18 +26,56 @@ function Products() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/products/");
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/products/"
+      );
+
       const data = await response.json();
+
       setProducts(data);
     } catch (error) {
-      console.error("Error loading products:", error);
+      console.error(
+        "Error loading products:",
+        error
+      );
     }
   };
 
-  const filteredProducts = products.filter((product) =>
-    `${product.sku} ${product.name}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter(
+    (product) => {
+      const matchesSearch =
+        `${product.sku} ${product.name}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+      const matchesCustomer =
+        !activeFilters.customer ||
+        String(product.customer) ===
+          String(activeFilters.customer);
+
+      const matchesProduct =
+        !activeFilters.product ||
+        String(product.id) ===
+          String(activeFilters.product);
+
+      const matchesTransaction =
+        !activeFilters.transaction ||
+        product.transaction ===
+          activeFilters.transaction;
+
+      const matchesDate =
+        !activeFilters.date ||
+        product.date_set_up ===
+          activeFilters.date;
+
+      return (
+        matchesSearch &&
+        matchesCustomer &&
+        matchesProduct &&
+        matchesTransaction &&
+        matchesDate
+      );
+    }
   );
 
   return (
@@ -31,26 +83,36 @@ function Products() {
       <div className="page-header">
         <div>
           <h2>Products</h2>
-          <p>Manage and view all product information</p>
+          <p>
+            Manage and view all product
+            information
+          </p>
         </div>
       </div>
 
       <div className="filters-bar">
         <div className="search-box">
           <Search size={20} />
+
           <input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) =>
+              setSearchTerm(e.target.value)
+            }
           />
         </div>
 
-        <button className="filter-btn">
-         <Filter size={18} />Filters
-        </button>
+        <SearchBar
+          page="products"
+          onFilter={setActiveFilters}
+        />
 
-        <Link to="/products/new" className="new-product-btn">
+        <Link
+          to="/products/new"
+          className="new-product-btn"
+        >
           New Product
         </Link>
       </div>
@@ -61,6 +123,7 @@ function Products() {
             <tr>
               <th>PRODUCT CODE</th>
               <th>PRODUCT DESCRIPTION</th>
+              <th>CUSTOMER</th>
               <th>TRANSACTION</th>
               <th>ACTIONS</th>
             </tr>
@@ -69,32 +132,55 @@ function Products() {
           <tbody>
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan="4" className="empty-state">
+                <td
+                  colSpan="5"
+                  className="empty-state"
+                >
                   <div className="empty-icon">
                     <Package size={34} />
                   </div>
-                  <h3>No products yet</h3>
-                  <p>Add your first product to start managing specifications.</p>
+
+                  <h3>No products found</h3>
+
+                  <p>
+                    Try changing your search
+                    or filters.
+                  </p>
                 </td>
               </tr>
             ) : (
-              filteredProducts.map((product) => (
-                <tr key={product.id}>
-                  <td>{product.sku}</td>
-                  <td>{product.name}</td>
-                  <td>{product.transaction || "—"}</td>
+              filteredProducts.map(
+                (product) => (
+                  <tr key={product.id}>
+                    <td>{product.sku}</td>
 
-                  <td className="actions">
-                    <Link to={`/products/${product.id}`}>
-                      <Eye size={18} />
-                    </Link>
+                    <td>{product.name}</td>
 
-                    <Link to={`/products/${product.id}?edit=true`}>
-                      <Pencil size={18} />
-                    </Link>
-                  </td>
-                </tr>
-              ))
+                    <td>
+                      {product.customer_name}
+                    </td>
+
+                    <td>
+                      {product.transaction ||
+                        "—"}
+                    </td>
+
+                    <td className="actions">
+                      <Link
+                        to={`/products/${product.id}`}
+                      >
+                        <Eye size={18} />
+                      </Link>
+
+                      <Link
+                        to={`/products/${product.id}?edit=true`}
+                      >
+                        <Pencil size={18} />
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              )
             )}
           </tbody>
         </table>

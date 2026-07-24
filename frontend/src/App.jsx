@@ -16,6 +16,7 @@ import Reports from "./pages/Reports";
 import JobProcessing from "./pages/JobProcessing";
 import Customers from "./pages/Customers";
 import CustomerDetail from "./pages/CustomerDetail";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -36,6 +37,9 @@ function App() {
 
         {/* Job Processing */}
         <Route path="/jobprocessing" element={<JobProcessing />} />
+
+        {/* Settings */}
+        <Route path="/settings" element={<Settings/>} />
 
         {/* Report Editors */}
         <Route path="/worksheet" element={<WorksheetEditor />} />

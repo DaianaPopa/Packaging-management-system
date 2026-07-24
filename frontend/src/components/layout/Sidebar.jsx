@@ -22,7 +22,7 @@ function Sidebar() {
 
       <NavLink to="/reports" className="sidebar-link">
         <AlertTriangle size={22} />
-        <span>Reports</span>
+        <span>AI Reports</span>
       </NavLink>
 
     </aside>

@@ -137,7 +137,7 @@ function TraceabilityEditor() {
 
                 <div className="traceability-header">
 
-                    <div className="header-left">
+                    <div className="traceability-header-left">
 
                         <div>
 
@@ -176,7 +176,7 @@ function TraceabilityEditor() {
 
                     </div>
 
-                    <div className="header-right">
+                    <div className="traceability-header-right">
 
                         <div>
 

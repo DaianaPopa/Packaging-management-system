@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import {
   Settings,
   LogOut,
@@ -34,10 +35,15 @@ function Header() {
           {openMenu && (
             <div className="profile-dropdown">
 
-              <button className="dropdown-item">
+              {/* <button className="dropdown-item">
                 <Settings size={18} />
                 Settings
-              </button>
+              </button> */}
+
+              <NavLink to="/settings" className="dropdown-item">
+                <Settings size={18} />
+                <span>Settings</span>
+              </NavLink>
 
               <button className="dropdown-item logout">
                 <LogOut size={18} />

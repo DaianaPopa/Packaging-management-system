@@ -1,64 +1,185 @@
-import { Table, ClipboardCheck, AlertTriangle, CalendarDays } from "lucide-react";
+import { Factory,Package,TrendingUp,Brain,AlertCircle,} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 
 function Reports() {
-  const reports = [
-    {
-      title: "Reject Report",
-      description: "Record packaging and product rejects with reasons",
-      icon: AlertTriangle,
-    },
-  
-  ];
+    return (
+        <div className="ai-dashboard">
 
-  return (
-    <div>
-      <div className="page-header">
-        <h2>Generate Report</h2>
-        <p>Select the type of report you want to generate</p>
-      </div>
+            <div className="page-header">
+                <h2>Operations Intelligence</h2>
 
-      <div className="report-grid">
-        {reports.map((report, index) => {
-          const Icon = report.icon;
-
-          return (
-            <div className="report-card" key={index}>
-              <div className="report-icon">
-                <Icon size={28} />
-              </div>
-
-              <h3>{report.title}</h3>
-              <p>{report.description}</p>
+                <p>
+                    AI-powered production planning and
+                    packaging forecasting.
+                </p>
             </div>
-          );
-        })}
-      </div>
 
-      <div className="report-parameters">
-        <h3>Report Parameters</h3>
+            {/* FILTERS */}
 
-        <div className="parameter-grid">
-          <div className="form-group">
-            <label>Product</label>
-            <select>
-              <option>Select product...</option>
-            </select>
-          </div>
+            <div className="dashboard-filters">
 
-          <div className="form-group">
-            <label>Customer</label>
-            <select>
-              <option>Select customer...</option>
-            </select>
-          </div>
+                <div className="form-group">
+                    <label>Customer</label>
+
+                    <select>
+                        <option>
+                            Select customer...
+                        </option>
+                    </select>
+                </div>
+
+                <div className="form-group">
+                    <label>Product</label>
+
+                    <select>
+                        <option>
+                            Select product...
+                        </option>
+                    </select>
+                </div>
+
+                <div className="form-group">
+                    <label>Forecast Period</label>
+
+                    <select>
+                        <option>7 Days</option>
+                        <option>30 Days</option>
+                        <option>90 Days</option>
+                    </select>
+                </div>
+
+            </div>
+
+            {/* KPI CARDS */}
+
+            <div className="kpi-grid">
+
+                <div className="kpi-card">
+                    <Factory size={28} />
+                    <h3>Production Efficiency</h3>
+                    <span>87%</span>
+                </div>
+
+                <div className="kpi-card">
+                    <Package size={28} />
+                    <h3>Packaging Required</h3>
+                    <span>12,450</span>
+                </div>
+
+                <div className="kpi-card">
+                    <TrendingUp size={28} />
+                    <h3>Forecast Accuracy</h3>
+                    <span>94%</span>
+                </div>
+
+                <div className="kpi-card warning">
+                    <AlertCircle size={28} />
+                    <h3>Component Risks</h3>
+                    <span>2</span>
+                </div>
+
+            </div>
+
+            {/* AI MODULES */}
+
+            <div className="analytics-grid">
+
+                {/* PRODUCTION */}
+
+                <div className="analytics-card">
+
+                    <div className="card-header">
+                        <Brain size={24} />
+
+                        <h3>
+                            Production Optimisation
+                        </h3>
+                    </div>
+
+                    <div className="chart-placeholder">
+
+                        Production Schedule Forecast
+
+                    </div>
+
+                    <div className="recommendations">
+
+                        <h4>
+                            AI Recommendations
+                        </h4>
+
+                        <ul>
+                            <li>
+                                Run MC043 before MB896
+                                to reduce setup time.
+                            </li>
+
+                            <li>
+                                Estimated saving:
+                                42 minutes.
+                            </li>
+
+                            <li>
+                                Combine similar
+                                packaging runs.
+                            </li>
+                        </ul>
+
+                    </div>
+
+                </div>
+
+                {/* PACKAGING */}
+
+                <div className="analytics-card">
+
+                    <div className="card-header">
+                        <Package size={24} />
+
+                        <h3>
+                            Packaging Usage Forecast
+                        </h3>
+                    </div>
+
+                    <div className="chart-placeholder">
+
+                        Component Consumption Forecast
+
+                    </div>
+
+                    <div className="forecast-list">
+
+                        <div>
+                            Cartons:
+                            <strong>
+                                2,400
+                            </strong>
+                        </div>
+
+                        <div>
+                            Labels:
+                            <strong>
+                                4,800
+                            </strong>
+                        </div>
+
+                        <div>
+                            Ribbon:
+                            <strong>
+                                2,400
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
-
-        <button className="generate-btn">
-          Generate Report
-        </button>
-      </div>
-    </div>
-  );
+    );
 }
 
 export default Reports;
