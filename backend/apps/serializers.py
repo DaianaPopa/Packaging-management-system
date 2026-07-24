@@ -159,14 +159,4 @@ class ProductSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-        # # ⭐ THIS FIXES YOUR 400 ERROR
-        # extra_kwargs = {
-        #     "description": {"required": False, "allow_blank": True},
-        #     "transaction": {"required": False, "allow_blank": True},
-        #     "inner_barcode": {"required": False, "allow_blank": True},
-        #     "outer_barcode": {"required": False, "allow_blank": True},
-        #     "pallet_configuration": {"required": False, "allow_blank": True},
-        #     "issue": {"required": False, "allow_blank": True},
-        #     "issue_date": {"required": False, "allow_null": True},
-        #     "date_set_up": {"required": False, "allow_null": True},
-        # }
+       

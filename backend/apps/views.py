@@ -219,6 +219,155 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     parser_classes = (JSONParser, MultiPartParser, FormParser)
 
+    @action(detail=False, methods=["post"], url_path="bulk-upload")
+    def bulk_upload(self, request):
+
+        customer_id = request.data.get("customer")
+        files = request.FILES.getlist("files")
+
+        if not customer_id:
+            return Response(
+                {"error": "Customer is required"},
+                status=400
+            )
+
+        if not files:
+            return Response(
+                {"error": "No files uploaded"},
+                status=400
+            )
+
+        created = 0
+        errors = []
+
+        uploader = UploadedFileViewSet()
+
+        for file_obj in files:
+
+            try:
+
+                temp_file = UploadedFile.objects.create(
+                    product=None,
+                    original_name=file_obj.name,
+                    file=file_obj
+                )
+
+                extracted = uploader.extract_from_excel(
+                    temp_file.file.path
+                )
+
+                sku = extracted.get("sku", "")
+
+                if Product.objects.filter(
+                    sku=sku
+                ).exists():
+
+                    errors.append({
+                        "file": file_obj.name,
+                        "error": f"SKU {sku} already exists"
+                    })
+
+                    continue
+
+                product = Product.objects.create(
+                    customer_id=customer_id,
+                    sku=sku,
+                    name=extracted.get("name", ""),
+                    description="",
+                    transaction="other",
+                    inner_barcode=extracted.get(
+                        "inner_barcode",
+                        ""
+                    ),
+                    outer_barcode=extracted.get(
+                        "outer_barcode",
+                        ""
+                    ),
+                    pallet_configuration=str(
+                        extracted.get(
+                            "units_per_outer",
+                            ""
+                        )
+                    ),
+                )
+
+                temp_file.product = product
+                temp_file.save()
+
+                spec = PackagingSpecification.objects.create(
+                    product=product,
+                    uploaded_file=temp_file,
+                    version="V1",
+                    units_per_outer=extracted.get(
+                        "units_per_outer",
+                        0
+                    ) or 0,
+                    ti=extracted.get("ti", 0) or 0,
+                    hi=extracted.get("hi", 0) or 0,
+                )
+
+                for comp in extracted.get(
+                    "components",
+                    []
+                ):
+
+                    Component.objects.create(
+                        packaging_specification=spec,
+                        component_sku=comp.get(
+                            "component_sku",
+                            ""
+                        ),
+                        component_name=comp.get(
+                            "component_name",
+                            ""
+                        ),
+                        supplier=comp.get(
+                            "supplier",
+                            ""
+                        ),
+                        units_per_piece=comp.get(
+                            "units_per_piece",
+                            ""
+                        ),
+                        units_per_outer=comp.get(
+                            "units_per_outer",
+                            ""
+                        ),
+                    )
+
+                for step in extracted.get(
+                    "steps",
+                    []
+                ):
+
+                    PackingProcessStep.objects.create(
+                        packaging_specification=spec,
+                        step_number=step.get(
+                            "step_number",
+                            0
+                        ),
+                        instruction=step.get(
+                            "instruction",
+                            ""
+                        ),
+                    )
+
+                created += 1
+
+            except Exception as e:
+
+                errors.append({
+                    "file": file_obj.name,
+                    "error": str(e)
+                })
+
+        return Response({
+            "message": f"{created} products created successfully",
+            "created": created,
+            "failed": len(errors),
+            "errors": errors
+        })
+
     def get_queryset(self):
 
             queryset = Product.objects.all().order_by("sku")
