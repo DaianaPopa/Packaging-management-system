@@ -129,7 +129,7 @@ function JobProcessing() {
 
         <div className="parameter-grid">
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>Date</label>
 
             <input
@@ -137,7 +137,7 @@ function JobProcessing() {
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
-          </div>
+          </div> */}
 
           <div className="form-group">
             <label>Customer</label>

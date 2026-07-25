@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
-import "../../styles/reports.css";
+import "../../styles/traceability.css";
 
 function TraceabilityEditor() {
 

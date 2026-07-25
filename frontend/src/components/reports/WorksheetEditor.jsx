@@ -2,7 +2,7 @@ import { useEffect, useState, useRef} from "react";
 // import { useReactToPrint } from "react-to-print";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
-import "../../styles/reports.css";
+import "../../styles/worksheet.css";
 
 function WorksheetEditor() {
     const [searchParams] = useSearchParams();
@@ -156,7 +156,8 @@ function WorksheetEditor() {
     }
 
         return (
-            <div className="worksheet" ref={worksheetRef}>
+            // <div className="worksheet" ref={worksheetRef}>
+            <div id="print-area" className="worksheet" ref={worksheetRef}>
                 <h1 className="worksheet-title">
                     DEKAPAK WORKSHEET
                 </h1>

@@ -103,7 +103,7 @@ class PackagingSpecificationSerializer(serializers.ModelSerializer):
 
 
 # ---------------------------------------------------------
-# PRODUCT (FULLY FIXED)
+# PRODUCT
 # ---------------------------------------------------------
 class ProductSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source="customer.company_name", read_only=True)

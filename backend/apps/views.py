@@ -2,6 +2,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
+from django.utils import timezone
 
 from .models import (
     Customer,
@@ -274,6 +275,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                     sku=sku,
                     name=extracted.get("name", ""),
                     description="",
+                    date_set_up=timezone.now().date(),
                     transaction="other",
                     inner_barcode=extracted.get(
                         "inner_barcode",
