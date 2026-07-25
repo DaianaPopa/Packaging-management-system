@@ -1,3 +1,8 @@
+from django.contrib.auth.models import User
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -10,14 +15,16 @@ from .models import (
     UploadedFile,
     PackagingSpecification,
     Component,
-    PackingProcessStep
+    PackingProcessStep,
+    UserProfile
 )
 
 from .serializers import (
     CustomerSerializer,
     ProductSerializer,
     UploadedFileSerializer,
-    PackagingSpecificationSerializer
+    PackagingSpecificationSerializer,
+    RegisterSerializer
 )
 
 import openpyxl
@@ -25,6 +32,24 @@ import json
 from rest_framework.decorators import api_view
 
 
+# register/login
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
+    queryset = User.objects.all()
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def me(request):
+
+    profile = UserProfile.objects.get(
+        user=request.user
+    )
+
+    return Response({
+        "id": request.user.id,
+        "username": request.user.username,
+        "role": profile.role,
+    })
 # ---------------------------------------------------------
 # WORKSHEET DATA
 # ---------------------------------------------------------

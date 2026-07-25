@@ -1,13 +1,23 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Settings,
   LogOut,
-  ChevronDown,
 } from "lucide-react";
 
 function Header() {
   const [openMenu, setOpenMenu] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("role");
+    localStorage.removeItem("username");
+
+    navigate("/login");
+  };
 
   return (
     <header className="header">
@@ -23,29 +33,33 @@ function Header() {
       </div>
 
       <div className="header-right">
-
         <div className="profile-wrapper">
           <button
             className="profile-btn"
-            onClick={() => setOpenMenu(!openMenu)}
+            onClick={() =>
+              setOpenMenu(!openMenu)
+            }
           >
-            <div className="avatar">Account</div>
+            <div className="avatar">
+              {localStorage.getItem("username") || "Account"}
+            </div>
           </button>
 
           {openMenu && (
             <div className="profile-dropdown">
 
-              {/* <button className="dropdown-item">
-                <Settings size={18} />
-                Settings
-              </button> */}
-
-              <NavLink to="/settings" className="dropdown-item">
+              <NavLink
+                to="/settings"
+                className="dropdown-item"
+              >
                 <Settings size={18} />
                 <span>Settings</span>
               </NavLink>
 
-              <button className="dropdown-item logout">
+              <button
+                className="dropdown-item logout"
+                onClick={handleLogout}
+              >
                 <LogOut size={18} />
                 Logout
               </button>
@@ -53,7 +67,6 @@ function Header() {
             </div>
           )}
         </div>
-
       </div>
     </header>
   );

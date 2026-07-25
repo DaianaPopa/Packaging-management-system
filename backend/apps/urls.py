@@ -1,7 +1,12 @@
 from rest_framework.routers import DefaultRouter
 from .views import CustomerViewSet, PackagingSpecificationViewSet, ProductViewSet, UploadedFileViewSet
 from django.urls import path
-from .views import worksheet_data, reject_report_data, checksheet_data, stocktake_data,traceability_data
+from .views import worksheet_data, reject_report_data, checksheet_data, stocktake_data,traceability_data, RegisterView, me
+
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 router = DefaultRouter()
 router.register("customers", CustomerViewSet, basename="customer")
@@ -34,5 +39,24 @@ urlpatterns = router.urls + [
     path(
     "job-processing/traceability/",
     traceability_data
+    ),
+   path(
+    "register/",
+    RegisterView.as_view()
+    ),
+
+    path(
+        "login/",
+        TokenObtainPairView.as_view()
+    ),
+
+    path(
+        "refresh/",
+        TokenRefreshView.as_view()
+    ),
+
+    path(
+        "me/",
+        me
     ),
 ]
