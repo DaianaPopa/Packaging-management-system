@@ -20,7 +20,7 @@ function CustomerDetail() {
 
   useEffect(() => {
     if (!isNewCustomer) {
-      fetch(`http://127.0.0.1:8000/api/customers/${id}/`)
+      fetch(`http://daianapopa.pythonanywhere.com/api/customers/${id}/`)
         .then((res) => res.json())
         .then((data) => setFormData(data))
         .catch((err) => console.error("Customer error:", err));
@@ -38,8 +38,8 @@ function CustomerDetail() {
     e.preventDefault();
 
     const url = isNewCustomer
-      ? "http://127.0.0.1:8000/api/customers/"
-      : `http://127.0.0.1:8000/api/customers/${id}/`;
+      ? "http://daianapopa.pythonanywhere.com/api/customers/"
+      : `http://daianapopa.pythonanywhere.com/api/customers/${id}/`;
 
     const method = isNewCustomer ? "POST" : "PUT";
 
@@ -57,7 +57,7 @@ function CustomerDetail() {
   const handleDelete = async () => {
     if (!window.confirm("Delete this customer?")) return;
 
-    await fetch(`http://127.0.0.1:8000/api/customers/${id}/`, {
+    await fetch(`http://daianapopa.pythonanywhere.com/api/customers/${id}/`, {
       method: "DELETE",
     });
 

@@ -25,7 +25,7 @@ function Customers() {
   const fetchCustomers = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/customers/"
+        "http://daianapopa.pythonanywhere.com/api/customers/"
       );
 
       const data = await response.json();

@@ -19,7 +19,7 @@ function SearchBar({ page = "products", onFilter }) {
     const loadCustomers = async () => {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/api/customers/"
+          "http://daianapopa.pythonanywhere.com/api/customers/"
         );
 
         if (!response.ok) {
@@ -46,7 +46,7 @@ function SearchBar({ page = "products", onFilter }) {
     const loadProducts = async () => {
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/products/?customer=${filters.customer}`
+          `http://daianapopa.pythonanywhere.com/api/products/?customer=${filters.customer}`
         );
 
         if (!response.ok) {

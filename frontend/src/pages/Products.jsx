@@ -22,7 +22,7 @@ function Products() {
   useEffect(() => {
     fetchProducts();
 
-    fetch("http://127.0.0.1:8000/api/customers/")
+    fetch("http://daianapopa.pythonanywhere.com/api/customers/")
       .then((res) => res.json())
       .then((data) => setCustomers(data))
       .catch((err) => console.error(err));
@@ -31,7 +31,7 @@ function Products() {
   const fetchProducts = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/products/"
+        "http://daianapopa.pythonanywhere.com/api/products/"
       );
 
       const data = await response.json();
@@ -62,7 +62,7 @@ function Products() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/products/bulk-upload/",
+        "http://daianapopa.pythonanywhere.com/api/products/bulk-upload/",
         {
           method: "POST",
           body: formData,
