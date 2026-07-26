@@ -32,7 +32,7 @@ function ProductDetail() {
 
   // Load customers
   useEffect(() => {
-    fetch("http://daianapopa.pythonanywhere.com/api/customers/")
+    fetch("https://daianapopa.pythonanywhere.com/api/customers/")
       .then((res) => res.json())
       .then((data) => setCustomers(data));
   }, []);
@@ -41,7 +41,7 @@ function ProductDetail() {
   useEffect(() => {
     if (isNewProduct) return;
 
-    fetch(`http://daianapopa.pythonanywhere.com/api/products/${id}/`)
+    fetch(`https://daianapopa.pythonanywhere.com/api/products/${id}/`)
       .then((res) => res.json())
       .then((product) => {
         setFormData((prev) => ({
@@ -75,7 +75,7 @@ function ProductDetail() {
 
     try {
       const autoFillResponse = await fetch(
-        "http://daianapopa.pythonanywhere.com/api/uploadedfiles/upload-temp/",
+        "https://daianapopa.pythonanywhere.com/api/uploadedfiles/upload-temp/",
         {
           method: "POST",
           body: uploadData,
@@ -134,7 +134,7 @@ function ProductDetail() {
     fd.append("steps", JSON.stringify(formData.packingProcess));
 
     const response = await fetch(
-      "http://daianapopa.pythonanywhere.com/api/products/create-with-file/",
+      "https://daianapopa.pythonanywhere.com/api/products/create-with-file/",
       {
         method: "POST",
         body: fd, 
@@ -155,7 +155,7 @@ function ProductDetail() {
   const handleDelete = async () => {
     if (!window.confirm("Delete this product?")) return;
 
-    await fetch(`http://daianapopa.pythonanywhere.com/api/products/${id}/`, {
+    await fetch(`https://daianapopa.pythonanywhere.com/api/products/${id}/`, {
       method: "DELETE",
     });
 

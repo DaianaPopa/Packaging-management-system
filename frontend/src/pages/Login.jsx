@@ -12,7 +12,7 @@ function Login() {
 
     try {
       const response = await fetch(
-        "http://daianapopa.pythonanywhere.com/api/login/",
+        "https://daianapopa.pythonanywhere.com/api/login/",
         {
           method: "POST",
           headers: {
@@ -43,7 +43,7 @@ function Login() {
       );
 
       const meResponse = await fetch(
-        "http://daianapopa.pythonanywhere.com/api/me/",
+        "https://daianapopa.pythonanywhere.com/api/me/",
         {
           headers: {
             Authorization: `Bearer ${data.access}`,

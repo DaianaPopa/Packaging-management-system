@@ -16,7 +16,7 @@ function Register() {
 
     try {
       const response = await fetch(
-        "http://daianapopa.pythonanywhere.com/api/register/",
+        "https://daianapopa.pythonanywhere.com/api/register/",
         {
           method: "POST",
           headers: {
