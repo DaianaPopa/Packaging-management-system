@@ -21,6 +21,7 @@ import CustomerDetail from "./pages/CustomerDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
+import DataAnalysis from "./pages/DataAnalysis";
 
 function App() {
   return (
@@ -82,6 +83,11 @@ function App() {
                 <Route
                   path="/jobprocessing"
                   element={<JobProcessing />}
+                />
+
+                 <Route
+                  path="/dataAnalysis"
+                  element={<DataAnalysis />}
                 />
 
                 <Route

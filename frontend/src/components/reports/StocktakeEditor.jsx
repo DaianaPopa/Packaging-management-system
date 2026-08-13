@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import * as XLSX from "xlsx";
 import "../../styles/stock.css";
 
 
@@ -8,13 +7,10 @@ function StocktakeEditor() {
 
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-
     const customerId = searchParams.get("customer");
     const productId = searchParams.get("product");
     const reportDate = searchParams.get("date");
-
     const [components, setComponents] = useState([]);
-
     const [stock, setStock] = useState({
         product: "",
         sku: "",
@@ -61,174 +57,179 @@ function StocktakeEditor() {
             console.error(err);
         }
     }
+    
     const handlePrint = () => {
-    window.print();
-};
+        // Hide elements that should not be printed
+        const buttons = document.querySelector(".worksheet-buttons");
+        const originalDisplay = buttons?.style.display;
 
-const handleExportExcel = () => {
-    try {
-        const workbook = XLSX.utils.book_new();
+        if (buttons) {
+            buttons.style.display = "none";
+        }
 
-        const worksheet = XLSX.utils.aoa_to_sheet([
-            ["R21 STOCKTAKE CHECKLIST"],
-            [],
-            ["JOB", `${stock.sku} - ${stock.product}`],
-            ["DATE", stock.date],
-            ["SIGNATURE", stock.signature],
-        ]);
+        const printStyle = document.createElement("style");
+        printStyle.id = "worksheet-portrait-print";
+        printStyle.innerHTML = `
+            @page {
+                size: A4 landscape !important;
+                margin: 8mm;
+            }
 
-        XLSX.utils.book_append_sheet(
-            workbook,
-            worksheet,
-            "Stocktake"
-        );
+            @media print {
+                body {
+                    width: 100% !important;
+                }
 
-        XLSX.writeFile(
-            workbook,
-            "Stocktake.xlsx"
-        );
+                #print-area {
+                    width: 100% !important;
+                    height: auto !important;
+                    min-height: auto !important;
+                    box-shadow: none !important;
+                    page-break-after: auto !important;
+                }
+            }
+        `;
+        document.head.appendChild(printStyle);
 
-    } catch (err) {
-        console.error(err);
-    }
-};
+        // Trigger print
+        window.print();
+
+        // Show elements again after print dialog is dismissed
+        setTimeout(() => {
+            if (buttons) {
+                buttons.style.display = originalDisplay || "";
+            }
+
+            printStyle.remove();
+        }, 1000);
+    };
 
     return (
-    <>
-          <div className="stocktake-page" id="print-area">
-              <h1 className="worksheet-title">
-                  R21 STOCKTAKE CHECKLIST
-              </h1>
+        <>
+            <div className="stocktake-page" id="print-area">
+                <h1 className="worksheet-title">
+                    R21 STOCKTAKE CHECKLIST
+                </h1>
 
-          {/* HEADER */}
-          <div className="stocktake-top">
+                {/* HEADER */}
+                <div className="stocktake-top">
 
-              <div className="job-line">
-                  <strong>JOB:</strong>
-                  <span>{stock.sku} - {stock.product}</span>
-              </div>
+                    <div className="job-line">
+                        <strong>JOB:</strong>
+                        <span>{stock.sku} - {stock.product}</span>
+                    </div>
 
-              <div className="signature-line">
-                  <strong>SIGNATURE:</strong>
-                  <input
-                      value={stock.signature}
-                      onChange={(e) =>
-                          setStock({
-                              ...stock,
-                              signature: e.target.value,
-                          })
-                      }
-                  />
-              </div>
+                    <div className="signature-line">
+                        <strong>SIGNATURE:</strong>
+                        <input
+                            value={stock.signature}
+                            onChange={(e) =>
+                                setStock({
+                                    ...stock,
+                                    signature: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
 
-              <div className="date-line">
-                  <strong>DATE:</strong>
-                  <input
-                      type="date"
-                      value={stock.date}
-                      onChange={(e) =>
-                          setStock({
-                              ...stock,
-                              date: e.target.value,
-                          })
-                      }
-                  />
-              </div>
+                    <div className="date-line">
+                        <strong>DATE:</strong>
+                        <input
+                            type="date"
+                            value={stock.date}
+                            onChange={(e) =>
+                                setStock({
+                                    ...stock,
+                                    date: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
 
-              <div className="balance-line">
-                  <strong>Bal on System:</strong>
-                  <input />
-              </div>
+                    <div className="balance-line">
+                        <strong>Bal on System:</strong>
+                        <input />
+                    </div>
 
-          </div>
+                </div>
 
-          {/* MAIN TABLE */}
-          <table className="physical-stock-table">
-              <thead>
-                  <tr>
-                      <th colSpan="2">PACKAGING</th>
-                      <th colSpan="6">ROOM COUNT</th>
-                      <th>OFFICE USE ONLY</th>
-                      <th>WAREHOUSE (+)</th>
-                      <th>TOTAL</th>
-                  </tr>
-                  <tr>
-                      <th>CODE</th>
-                      <th>DESCRIPTION</th>
-                      <th>BATCH NO.</th>
-                      <th>BEST BEFORE</th>
-                      <th>QTY / PALLET</th>
-                      <th>QTY IN ROOM</th>
-                      <th>BOXES</th>
-                      <th>SINGLES</th>
-                      <th>TOTAL</th>
-                      <th>WAREHOUSE</th>
-                      <th>TOTAL</th>
-                  </tr>
-              </thead>
+                {/* MAIN TABLE */}
+                <table className="physical-stock-table">
+                    <thead>
+                        <tr>
+                            <th colSpan="2">PACKAGING</th>
+                            <th colSpan="6">ROOM COUNT</th>
+                            <th colSpan="3">OFFICE USE ONLY</th>
 
-              <tbody>
-                  {components.length > 0 ? (
-                      components.map((component) => (
-                          <tr key={component.id}>
-                            <td>{component.component_sku}</td>
-                              <td>{component.component_name}</td>
-                              <td><input /></td>
-                              <td><input /></td>
-                              <td><input /></td>
-                              <td><input /></td>
-                              <td><input /></td>
-                              <td><input /></td>
-                              <td><input /></td>
-                              <td><input /></td>
-                              <td><input /></td>
-                          </tr>
-                      ))
-                  ) : (
+                        </tr>
+                        <tr>
+                            <th>CODE</th>
+                            <th>DESCRIPTION</th>
+                            <th>BATCH NO.</th>
+                            <th>BEST BEFORE</th>
+                            <th>QTY / PALLET</th>
+                            <th>QTY IN ROOM</th>
+                            <th>BOXES</th>
+                            <th>SINGLES</th>
+                            <th>ROOM</th>
+                            <th>WAREHOUSE</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
 
-                      <tr>
-                          <td colSpan="11">
-                              No components found
-                          </td>
-                      </tr>
+                    <tbody>
+                        {components.length > 0 ? (
+                            components.map((component) => (
+                                <tr key={component.id}>
+                                    <td>{component.component_sku}</td>
+                                    <td>{component.component_name}</td>
+                                    <td><input /></td>
+                                    <td><input /></td>
+                                    <td><input /></td>
+                                    <td><input /></td>
+                                    <td><input /></td>
+                                    <td><input /></td>
+                                    <td><input /></td>
+                                    <td><input /></td>
+                                    <td><input /></td>
+                                </tr>
+                            ))
+                        ) : (
 
-                  )}
-              </tbody>
-          </table>
-      </div>
+                            <tr>
+                                <td colSpan="11">
+                                    No components found
+                                </td>
+                            </tr>
 
-      {/* BUTTONS */}
-        <div className="stocktake-buttons no-print">
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
-            <button className="save-btn">
-                Save
-            </button>
+            {/* BUTTONS */}
+            <div className="stocktake-buttons no-print">
 
-            <button
-                className="print-btn"
-                onClick={handlePrint}
-            >
-                Print
-            </button>
+                <button className="save-btn">
+                    Save
+                </button>
 
-            <button
-                className="excel-btn"
-                onClick={handleExportExcel}
-            >
-                Export Excel
-            </button>
+                <button
+                    className="print-btn"
+                    onClick={handlePrint}
+                >
+                    Print
+                </button>
 
-            <button
-                type="button"
-                onClick={() =>
-                    navigate("/jobprocessing")
-                }
-            >
-                Cancel
-            </button>
-
-        </div>
-
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate("/jobprocessing")
+                    }
+                >
+                    Cancel
+                </button>
+            </div>
         </>
     );
 }

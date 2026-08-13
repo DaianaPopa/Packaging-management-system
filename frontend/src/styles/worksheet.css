@@ -161,14 +161,16 @@
 
     .worksheet {
         width: 210mm;
-        height: 297mm;
+        height: auto;
+        min-height: auto;
         margin: 0;
         padding: 12mm;
-        page-break-after: always;
+        page-break-after: auto;
         box-shadow: none;
     }
 
-    .worksheet-buttons {
+    .worksheet-buttons,
+    .no-print {
         display: none !important;
     }
 

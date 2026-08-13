@@ -1,17 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import * as XLSX from "xlsx";
 import "../../styles/check.css";
 
 function ChecksheetEditor() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const sheetRef = useRef(null);
-
     const customerId = searchParams.get("customer");
     const productId = searchParams.get("product");
     const reportDate = searchParams.get("date");
-
     const [loading, setLoading] = useState(true);
     const [sheet, setSheet] = useState(null);
 
@@ -60,62 +57,46 @@ function ChecksheetEditor() {
         // Hide elements that should not be printed
         const buttons = document.querySelector(".worksheet-buttons");
         const originalDisplay = buttons?.style.display;
-        
+
         if (buttons) {
             buttons.style.display = "none";
         }
-        
+
+        const printStyle = document.createElement("style");
+        printStyle.id = "worksheet-portrait-print";
+        printStyle.innerHTML = `
+            @page {
+                size: A4 portrait !important;
+                margin: 8mm;
+            }
+
+            @media print {
+                body {
+                    width: 100% !important;
+                }
+
+                #print-area {
+                    width: 100% !important;
+                    height: auto !important;
+                    min-height: auto !important;
+                    box-shadow: none !important;
+                    page-break-after: auto !important;
+                }
+            }
+        `;
+        document.head.appendChild(printStyle);
+
         // Trigger print
         window.print();
-        
+
         // Show elements again after print dialog is dismissed
         setTimeout(() => {
             if (buttons) {
                 buttons.style.display = originalDisplay || "";
             }
-        }, 500);
-    };
 
-    const handleExportExcel = () => {
-        try {
-            const workbook = XLSX.utils.book_new();
-            
-            const data = [];
-            
-            data.push(["DATE CODING & LABEL CHECK SHEET V2 2025"]);
-            data.push([]);
-            
-            data.push(["Product", sheet.product]);
-            data.push(["Date", sheet.date]);
-            data.push([]);
-            
-            data.push(["SECTION 1"]);
-            data.push(["Time", sheet.time1]);
-            data.push(["Initial", sheet.initial1]);
-            data.push([]);
-            
-            data.push(["SECTION 2"]);
-            data.push(["Time", sheet.time2]);
-            data.push(["Initial", sheet.initial2]);
-            
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            
-            ws["!cols"] = [
-                { wch: 30 },
-                { wch: 25 }
-            ];
-            
-            XLSX.utils.book_append_sheet(workbook, ws, "Checksheet");
-            
-            // Generate filename with date
-            const timestamp = new Date().toISOString().slice(0, 10);
-            const filename = `Checksheet_${sheet.product}_${timestamp}.xlsx`;
-            
-            XLSX.writeFile(workbook, filename);
-        } catch (err) {
-            console.error("Error exporting to Excel:", err);
-            alert("Failed to export checksheet to Excel");
-        }
+            printStyle.remove();
+        }, 1000);
     };
 
     if (loading) {
@@ -140,7 +121,7 @@ function ChecksheetEditor() {
                 {/* TITLE */}
 
                 <h1 className="datecoding-title">
-                    DATE CODING & LABEL CHECK SHEET 
+                    DATE CODING & LABEL CHECK SHEET
                 </h1>
 
                 {/* HEADER */}
@@ -332,7 +313,7 @@ function ChecksheetEditor() {
 
                         </div>
 
-                       <div className="product-coding-box">
+                        <div className="product-coding-box">
                             {sheet.productCodingImage2 ? (
                                 <img
                                     src={sheet.productCodingImage2}
@@ -381,13 +362,6 @@ function ChecksheetEditor() {
                     onClick={handlePrint}
                 >
                     Print
-                </button>
-
-                <button
-                    className="excel-btn"
-                    onClick={handleExportExcel}
-                >
-                    Export Excel
                 </button>
 
                 <button

@@ -310,6 +310,18 @@ function ProductDetail() {
         </div>
 
         <div className="form-row">
+          <label>Pallet configuration</label>
+          <input
+            name="palletConfiguration"
+            value={formData.palletisationStatistics}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, pallet_configuration: e.target.value }))
+            }
+            disabled={!isEditing}
+          />
+        </div>
+
+        <div className="form-row">
         <label>Suspend Record</label>
 
         <div className="radio-group">

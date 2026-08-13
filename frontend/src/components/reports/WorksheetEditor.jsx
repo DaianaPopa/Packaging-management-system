@@ -1,22 +1,16 @@
-import { useEffect, useState, useRef} from "react";
-// import { useReactToPrint } from "react-to-print";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import * as XLSX from "xlsx";
 import "../../styles/worksheet.css";
 
 function WorksheetEditor() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const worksheetRef = useRef(null);
-
     const customerId = searchParams.get("customer");
     const productId = searchParams.get("product");
     const reportDate = searchParams.get("date");
-
     const [loading, setLoading] = useState(true);
-
     const [worksheet, setWorksheet] = useState(null);
-
     const [pallets, setPallets] = useState(
         Array.from({ length: 20 }, (_, i) => ({
             pallet: i + 1,
@@ -64,83 +58,46 @@ function WorksheetEditor() {
         // Hide elements that should not be printed
         const buttons = document.querySelector(".worksheet-buttons");
         const originalDisplay = buttons?.style.display;
-        
+
         if (buttons) {
             buttons.style.display = "none";
         }
-        
+
+        const printStyle = document.createElement("style");
+        printStyle.id = "worksheet-portrait-print";
+        printStyle.innerHTML = `
+            @page {
+                size: A4 portrait !important;
+                margin: 8mm;
+            }
+
+            @media print {
+                body {
+                    width: 100% !important;
+                }
+
+                #print-area {
+                    width: 100% !important;
+                    height: auto !important;
+                    min-height: auto !important;
+                    box-shadow: none !important;
+                    page-break-after: auto !important;
+                }
+            }
+        `;
+        document.head.appendChild(printStyle);
+
         // Trigger print
         window.print();
-        
+
         // Show elements again after print dialog is dismissed
         setTimeout(() => {
             if (buttons) {
                 buttons.style.display = originalDisplay || "";
             }
-        }, 500);
-    };
 
-    const handleExportExcel = () => {
-        try {
-            // Create a new workbook
-            const workbook = XLSX.utils.book_new();
-            
-            // Prepare worksheet data
-            const worksheetData = [];
-            
-            // Add title
-            worksheetData.push(["DEKAPAK WORKSHEET"]);
-            worksheetData.push([]);
-            
-            // Add header information
-            worksheetData.push(["Customer", worksheet.customer, "Product Code", worksheet.sku]);
-            worksheetData.push(["Pallet Configuration", worksheet.pallet_configuration, "Product Name", worksheet.product]);
-            worksheetData.push(["Job Type", worksheet.transaction, "Date", worksheet.date]);
-            worksheetData.push([]);
-            
-            // Add job description
-            worksheetData.push(["Job Description"]);
-            (worksheet.steps || []).forEach((step) => {
-                worksheetData.push([step.instruction]);
-            });
-            worksheetData.push([]);
-            
-            // Add pallet table
-            worksheetData.push(["Pallet No.", "No. of Outers"]);
-            pallets.forEach((pallet) => {
-                worksheetData.push([pallet.pallet, pallet.outers || ""]);
-            });
-            worksheetData.push([]);
-            
-            // Add footer information
-            worksheetData.push(["Please initial when instructions are understood:"]);
-            worksheetData.push(["Supervisors Signature:"]);
-            worksheetData.push(["Office Use:"]);
-            
-            // Create worksheet from data
-            const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-            
-            // Set column widths
-            ws["!cols"] = [
-                { wch: 30 },
-                { wch: 20 },
-                { wch: 30 },
-                { wch: 20 }
-            ];
-            
-            // Add worksheet to workbook
-            XLSX.utils.book_append_sheet(workbook, ws, "Worksheet");
-            
-            // Generate filename with date
-            const timestamp = new Date().toISOString().slice(0, 10);
-            const filename = `Worksheet_${worksheet.customer}_${worksheet.product}_${timestamp}.xlsx`;
-            
-            // Write file
-            XLSX.writeFile(workbook, filename);
-        } catch (err) {
-            console.error("Error exporting to Excel:", err);
-            alert("Failed to export worksheet to Excel");
-        }
+            printStyle.remove();
+        }, 1000);
     };
 
     if (loading) {
@@ -155,102 +112,95 @@ function WorksheetEditor() {
         return <h2>Unable to load worksheet.</h2>;
     }
 
-        return (
-            // <div className="worksheet" ref={worksheetRef}>
-            <div id="print-area" className="worksheet" ref={worksheetRef}>
-                <h1 className="worksheet-title">
-                    DEKAPAK WORKSHEET
-                </h1>
+    return (
+    <>
+        <div id="print-area" className="worksheet" ref={worksheetRef}>
+            <h1 className="worksheet-title">
+                DEKAPAK WORKSHEET
+            </h1>
 
-                {/* HEADER */}
-                <table className="worksheet-header">
-                    <tbody>
-                        <tr>
-                            <th>Customer</th>
-                            <td>{worksheet.customer}</td>
+            {/* HEADER */}
+            <table className="worksheet-header">
+                <tbody>
+                    <tr>
+                        <th>Customer</th>
+                        <td>{worksheet.customer}</td>
 
-                            <th>Product Code</th>
-                            <td>{worksheet.sku}</td>
-                        </tr>
+                        <th>Product Code</th>
+                        <td>{worksheet.sku}</td>
+                    </tr>
 
-                        <tr>
-                            <th>Pallet Configuration</th>
-                            <td>{worksheet.pallet_configuration}</td>
+                    <tr>
+                        <th>Pallet Configuration</th>
+                        <td>{worksheet.pallet_configuration}</td>
 
-                            <th>Product Name</th>
-                            <td>{worksheet.product}</td>
-                        </tr>
+                        <th>Product Name</th>
+                        <td>{worksheet.product}</td>
+                    </tr>
 
-                        <tr>
-                            <th>Job Type</th>
-                            <td>{worksheet.transaction}</td>
+                    <tr>
+                        <th>Job Type</th>
+                        <td>{worksheet.transaction}</td>
 
-                            <th>Date</th>
-                            <td><input
-                                    type="date"
-                                    value={worksheet.date || ""}
-                                    onChange={(e) =>
-                                        setWorksheet({
-                                            ...worksheet,
-                                            date: e.target.value,
-                                        })
-                                    }
-                                /></td>
+                        <th>Date</th>
+                        <td><input
+                            type="date"
+                            value={worksheet.date || ""}
+                            onChange={(e) =>
+                                setWorksheet({
+                                    ...worksheet,
+                                    date: e.target.value,
+                                })
+                            }
+                        /></td>
 
-                        </tr>
-                    </tbody>
-                </table>
+                    </tr>
+                </tbody>
+            </table>
 
-                {/* MAIN CONTENT */}
-                <div className="worksheet-content">
-                    {/* LEFT SIDE */}
-                    <div className="job-description">
-                        <div className="job-title">
-                            Job Description
-                        </div>
-
-                        {(worksheet.steps || []).map((step) => (
-                            <div
-                                key={step.step_number}
-                                className="job-row"
-                            >
-                                {step.instruction}
-                            </div>
-                        ))}
-
-                        {/* Empty rows to match original */}
-                        {Array.from({
-                            length: Math.max(0, 8 - (worksheet.steps?.length || 0))
-                        }).map((_, index) => (
-                            <div
-                                key={`blank-${index}`}
-                                className="job-row"
-                            />
-                        ))}
+            {/* MAIN CONTENT */}
+            <div className="worksheet-content">
+                {/* LEFT SIDE */}
+                <div className="job-description">
+                    <div className="job-title">
+                        Job Description
                     </div>
+
+                    {(worksheet.steps || []).map((step) => (
+                        <div
+                            key={step.step_number}
+                            className="job-row"
+                        >
+                            {step.instruction}
+                        </div>
+                    ))}
+
+                    {/* Empty rows to match original */}
+                    {Array.from({
+                        length: Math.max(0, 8 - (worksheet.steps?.length || 0))
+                    }).map((_, index) => (
+                        <div
+                            key={`blank-${index}`}
+                            className="job-row"
+                        />
+                    ))}
+                </div>
 
                 {/* RIGHT SIDE */}
                 <table className="pallet-table">
 
                     <thead>
-
                         <tr>
                             <th>Pallet No.</th>
                             <th>No. of Outers</th>
                         </tr>
-
                     </thead>
 
                     <tbody>
-
                         {pallets.map((pallet, index) => (
-
                             <tr key={index}>
-
                                 <td>{pallet.pallet}</td>
-
                                 <td>
-
                                     <input
                                         type="number"
                                         value={pallet.outers}
@@ -258,54 +208,47 @@ function WorksheetEditor() {
                                             updateOuter(index, e.target.value)
                                         }
                                     />
-
                                 </td>
-
                             </tr>
-
                         ))}
-
                         <tr>
-
                             <td>
                                 <strong>Totals</strong>
                             </td>
-
                             <td></td>
-
                         </tr>
-
                     </tbody>
 
                 </table>
+
             </div>
-    
+
             {/* FOOTER */}
 
-                <div className="worksheet-footer">
+            <div className="worksheet-footer">
 
-                    <div className="footer-item">
-                        <span>
-                            Please initial when instructions are understood:
-                        </span>
-                        <div className="signature-line"></div>
-                    </div>
-
-                    <div className="footer-item">
-                        <span>Supervisors Signature:</span>
-                        <div className="signature-line"></div>
-                    </div>
-
-                    <div className="footer-item">
-                        <span>Office Use:</span>
-                        <div className="signature-line"></div>
-                    </div>
-
+                <div className="footer-item">
+                    <span>
+                        Please initial when instructions are understood:
+                    </span>
+                    <div className="signature-line"></div>
                 </div>
 
+                <div className="footer-item">
+                    <span>Supervisors Signature:</span>
+                    <div className="signature-line"></div>
+                </div>
 
+                <div className="footer-item">
+                    <span>Office Use:</span>
+                    <div className="signature-line"></div>
+                </div>
+
+            </div>
+
+        </div>
             {/* BUTTONS */}
-            <div className="worksheet-buttons">
+            <div className="worksheet-buttons no-print">
 
                 <button className="save-btn">
                     Save
@@ -313,10 +256,6 @@ function WorksheetEditor() {
 
                 <button className="print-btn" onClick={handlePrint}>
                     Print
-                </button>
-
-                <button className="excel-btn" onClick={handleExportExcel}>
-                    Export Excel
                 </button>
 
                 <button
@@ -327,9 +266,8 @@ function WorksheetEditor() {
                 </button>
 
             </div>
-
-        </div>
-    );
+    </>
+  );
 }
 
 export default WorksheetEditor;

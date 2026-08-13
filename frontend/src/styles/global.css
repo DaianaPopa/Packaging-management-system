@@ -11,7 +11,6 @@ body {
 }
 
 /* HEADER / TOP NAVBAR */
-
 .header {
   height: 90px;
   background: white;
@@ -25,7 +24,6 @@ body {
 }
 
 /* Logo section */
-
 .logo-section {
   display: flex;
   align-items: center;
@@ -46,7 +44,6 @@ body {
 }
 
 /* Header right section */
-
 .header-right {
   display: flex;
   align-items: center;
@@ -119,13 +116,11 @@ body {
 
 
 /*  MAIN LAYOUT*/
-
 .main-layout {
   display: flex;
 }
 
 /* SIDEBAR */
-
 .sidebar {
   width: 250px;
 
@@ -139,7 +134,6 @@ body {
 }
 
 /* Sidebar navigation links */
-
 .sidebar-link {
   display: flex;
   align-items: center;
@@ -164,14 +158,12 @@ body {
 }
 
 /* PAGE CONTENT*/
-
 .page-content {
   flex: 1;
   padding: 30px;
 }
 
 /* PAGE HEADER*/
-
 .page-header h2 {
   font-size: 48px;
   margin-bottom: 10px;
@@ -184,7 +176,6 @@ body {
 }
 
 /* FILTERS / SEARCH BAR */
-
 .filters-bar {
   display: flex;
   gap: 20px;
@@ -193,7 +184,6 @@ body {
 }
 
 /* Search container */
-
 .search-box {
   flex: 1;
 
@@ -210,7 +200,6 @@ body {
 }
 
 /* Search input */
-
 .search-box input {
   border: none;
   outline: none;
@@ -221,7 +210,6 @@ body {
 }
 
 /* Filter button */
-
 .filter-btn {
   padding: 0 24px;
 
@@ -238,7 +226,6 @@ body {
 }
 
 /* Main action button */
-
 .new-product-btn {
   background: red;
   color: white;
@@ -259,7 +246,6 @@ body {
 }
 
 /*TABLES */
-
 .table-wrapper {
   background: white;
 
@@ -275,7 +261,6 @@ table {
 }
 
 /* Table cells */
-
 th,
 td {
   text-align: left;
@@ -293,7 +278,6 @@ th {
 }
 
 /* Status badge */
-
 .status-badge {
   background: #dcfce7;
   color: #15803d;
@@ -307,7 +291,6 @@ th {
 }
 
 /* Action buttons/icons */
-
 .actions {
   display: flex;
   gap: 20px;
@@ -316,7 +299,6 @@ th {
 /*REPORTS PAGE */
 
 /* Report cards grid */
-
 .report-grid {
   display: grid;
 
@@ -328,7 +310,6 @@ th {
 }
 
 /* Individual report card */
-
 .report-card {
   background: white;
 
@@ -351,7 +332,6 @@ th {
 }
 
 /* Report icon */
-
 .report-icon {
   width: 60px;
   height: 60px;
@@ -370,21 +350,18 @@ th {
 }
 
 /* Report titles */
-
 .report-card h3 {
   font-size: 20px;
   margin-bottom: 12px;
 }
 
 /* Report description */
-
 .report-card p {
   font-size: 17px;
   color: #334155;
 }
 
 /* Report parameters container */
-
 .report-parameters {
   background: white;
 
@@ -400,7 +377,6 @@ th {
 }
 
 /* Parameters grid */
-
 .parameter-grid {
   display: grid;
 
@@ -410,7 +386,6 @@ th {
 }
 
 /* FORMS */
-
 .form-group {
   display: flex;
   flex-direction: column;
@@ -423,7 +398,6 @@ th {
 }
 
 /*  Sections  */
-
 .section-title {
     margin-top: 30px;
     margin-bottom: 15px;
@@ -435,7 +409,6 @@ th {
 }
 
 /*  Component Cards  */
-
 .component-card {
     background: #fafafa;
     border: 1px solid #ddd;
@@ -450,7 +423,6 @@ th {
 }
 
 /*  Component Grid  */
-
 .component-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -462,7 +434,6 @@ th {
 }
 
 /*  Textareas  */
-
 textarea {
     width: 100%;
     min-height: 80px;
@@ -475,7 +446,6 @@ textarea {
 }
 
 /*  Add Button */
-
 .add-btn {
     margin-top: 12px;
     margin-bottom: 20px;
@@ -492,7 +462,6 @@ textarea {
 }
 
 /*Small Delete Button  */
-
 .delete-btn-small {
     margin-top: 10px;
     padding: 6px 14px;
@@ -507,8 +476,7 @@ textarea {
     background: #a71d2a;
 }
 
-/*Better spacing*/
-
+/* spacing*/
 .form-row {
     margin-bottom: 15px;
 }
@@ -525,7 +493,6 @@ textarea {
 }
 
 /* Select input */
-
 .form-group select {
   height: 52px;
 
@@ -540,7 +507,6 @@ textarea {
 }
 
 /* Text input */
-
 .form-group input {
   height: 52px;
 
@@ -553,7 +519,6 @@ textarea {
 }
 
 /* Main generate/save button */
-
 .generate-btn {
   margin-top: 30px;
 
@@ -574,7 +539,6 @@ textarea {
 /* CUSTOMER PAGE */
 
 /* Empty state */
-
 .empty-state {
   text-align: center;
 
@@ -584,7 +548,6 @@ textarea {
 }
 
 /* Empty icon */
-
 .empty-icon {
   width: 70px;
   height: 70px;
@@ -603,14 +566,12 @@ textarea {
 }
 
 /* Empty title */
-
 .empty-state h3 {
   color: #0f172a;
   margin-bottom: 8px;
 }
 
 /* Customer form card */
-
 .customer-form-card {
   margin-top: 30px;
 
@@ -628,7 +589,6 @@ textarea {
 }
 
 /* Customer form grid */
-
 .customer-form-grid {
   display: grid;
 
@@ -662,7 +622,6 @@ textarea {
 }
 
 /* FORM CONTAINER*/
-
 .product-form {
   background: #ffffff;
   border: 1px solid #d7dce0;
@@ -671,7 +630,6 @@ textarea {
 }
 
 /* ACTIONS BAR */
-
 .form-actions {
   display: flex;
   gap: 0.75rem;
@@ -690,7 +648,6 @@ textarea {
 }
 
 /* Save */
-
 .save-btn {
   background: #16a34a;
   color: white;
@@ -701,7 +658,6 @@ textarea {
 }
 
 /* Edit */
-
 .edit-btn {
   background: #2563eb;
   color: white;
@@ -712,7 +668,6 @@ textarea {
 }
 
 /* Delete */
-
 .delete-btn {
   background: #dc2626;
   color: white;
@@ -723,7 +678,6 @@ textarea {
 }
 
 /* Default */
-
 .form-actions button:not(.save-btn):not(.edit-btn):not(.delete-btn) {
   background: #e5e7eb;
   color: #374151;
@@ -734,7 +688,6 @@ textarea {
 }
 
 /* ATTACHMENT ROW*/
-
 .attach-row {
   display: flex;
   justify-content: space-between;
@@ -758,7 +711,6 @@ textarea {
 }
 
 /*FORM */
-
 .form-row {
   display: grid;
   grid-template-columns: 250px 1fr;
@@ -788,7 +740,6 @@ textarea {
 }
 
 /* TEXT AREAS*/
-
 .textarea-large {
   align-items: stretch;
 }
@@ -808,7 +759,6 @@ textarea {
 }
 
 /*RADIO GROUP*/
-
 .radio-group {
   display: flex;
   gap: 2rem;
@@ -830,7 +780,6 @@ textarea {
 }
 
 /* READ ONLY MODE*/
-
 input:disabled,
 select:disabled,
 textarea:disabled {

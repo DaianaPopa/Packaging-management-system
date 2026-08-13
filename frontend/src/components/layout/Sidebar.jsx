@@ -1,4 +1,4 @@
-import { Package, FileText, Building2, AlertTriangle } from "lucide-react";
+import { Package, FileText, Building2, AlertTriangle, DatabaseIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 function Sidebar() {
@@ -23,6 +23,11 @@ function Sidebar() {
       <NavLink to="/jobprocessing" className="sidebar-link">
         <FileText size={22} />
         <span>Job Processing</span>
+      </NavLink>
+
+      <NavLink to="/dataAnalysis" className="sidebar-link">
+        <DatabaseIcon size={22} />
+        <span>Data analysis</span>
       </NavLink>
 
       {role === "admin" && (

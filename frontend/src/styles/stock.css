@@ -127,7 +127,7 @@
 
 .physical-stock-table th:nth-child(3),
 .physical-stock-table td:nth-child(3) {
-    width: 10%;
+    width: 15%;
 }
 
 .physical-stock-table th:nth-child(4),
@@ -157,7 +157,7 @@
 
 .physical-stock-table th:nth-child(9),
 .physical-stock-table td:nth-child(9) {
-    width: 8%;
+    width: 1%;
 }
 
 .physical-stock-table th:nth-child(10),
@@ -176,17 +176,17 @@
 
 .physical-stock-table th:nth-child(2),
 .physical-stock-table td:nth-child(2) {
-    border-right: 2px solid #000;
+    border-right: 1px solid #000;
 }
 
 .physical-stock-table th:nth-child(8),
 .physical-stock-table td:nth-child(8) {
-    border-right: 2px solid #000;
+    border-right: 1px solid #000;
 }
 
 .physical-stock-table th:nth-child(9),
 .physical-stock-table td:nth-child(9) {
-    border-right: 2px solid #000;
+    border-right: 1px solid #000;
 }
 
 /* ==================================================
