@@ -6,64 +6,140 @@ function ChecksheetEditor() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const sheetRef = useRef(null);
-    const customerId = searchParams.get("customer");
+
     const productId = searchParams.get("product");
-    const reportDate = searchParams.get("date");
+    const reportDate =
+        searchParams.get("date") ||
+        new Date().toISOString().split("T")[0];
+
     const [loading, setLoading] = useState(true);
     const [sheet, setSheet] = useState(null);
+    const [error, setError] = useState("");
+
+    /*
+    ---------------------------------------------------------
+    LOAD CHECKSHEET
+    ---------------------------------------------------------
+    */
 
     useEffect(() => {
-        if (customerId && productId) {
-            loadChecksheet();
-        } else {
+        if (!productId) {
+            setError("No product selected.");
             setLoading(false);
+            return;
         }
-    }, [customerId, productId, reportDate]);
+
+        loadChecksheet();
+    }, [productId, reportDate]);
 
     async function loadChecksheet() {
         try {
+            setLoading(true);
+            setError("");
+
             const response = await fetch(
-                `/api/job-processing/checksheet/?customer=${customerId}&product=${productId}&date=${reportDate}`
+                `/api/job-processing/checksheet/?product=${productId}&date=${reportDate}`
             );
 
             if (!response.ok) {
-                throw new Error("Failed to load checksheet");
+                const errorData =
+                    await response.json().catch(() => null);
+
+                throw new Error(
+                    errorData?.error ||
+                    "Failed to load checksheet"
+                );
             }
 
             const data = await response.json();
 
+            console.log("Checksheet API:", data);
+
             setSheet({
-                product: data.product,
-                date: reportDate,
+                customer: data.customer || "",
+                product: data.product || "",
+                sku: data.sku || "",
+                date: data.date || reportDate,
+
                 time1: "",
                 initial1: "",
+
                 time2: "",
                 initial2: "",
-                outerCodingImage: data.outerCodingImage || "",
-                productCodingImage: data.productCodingImage || "",
-                evidenceImage: data.evidenceImage || "",
-                outerCodingImage2: data.outerCodingImage2 || "",
-                productCodingImage2: data.productCodingImage2 || "",
-                evidenceImage2: data.evidenceImage2 || "",
+
+                outerCodingImage:
+                    data.outerCodingImage || "",
+
+                productCodingImage:
+                    data.productCodingImage || "",
+
+                evidenceImage:
+                    data.evidenceImage || "",
+
+                outerCodingImage2:
+                    data.outerCodingImage2 || "",
+
+                productCodingImage2:
+                    data.productCodingImage2 || "",
+
+                evidenceImage2:
+                    data.evidenceImage2 || "",
             });
+
         } catch (err) {
-            console.error(err);
+            console.error(
+                "Checksheet error:",
+                err
+            );
+
+            setError(
+                err.message ||
+                "Failed to load checksheet."
+            );
+
         } finally {
             setLoading(false);
         }
     }
 
+    /*
+    ---------------------------------------------------------
+    UPDATE SHEET
+    ---------------------------------------------------------
+    */
+
+    function updateSheet(field, value) {
+        setSheet((previous) => ({
+            ...previous,
+            [field]: value,
+        }));
+    }
+
+    /*
+    ---------------------------------------------------------
+    PRINT
+    ---------------------------------------------------------
+    */
+
     const handlePrint = () => {
-        // Hide elements that should not be printed
-        const buttons = document.querySelector(".worksheet-buttons");
-        const originalDisplay = buttons?.style.display;
+        const buttons =
+            document.querySelector(
+                ".worksheet-buttons"
+            );
+
+        const originalDisplay =
+            buttons?.style.display;
 
         if (buttons) {
             buttons.style.display = "none";
         }
 
-        const printStyle = document.createElement("style");
-        printStyle.id = "worksheet-portrait-print";
+        const printStyle =
+            document.createElement("style");
+
+        printStyle.id =
+            "checksheet-portrait-print";
+
         printStyle.innerHTML = `
             @page {
                 size: A4 portrait !important;
@@ -71,45 +147,207 @@ function ChecksheetEditor() {
             }
 
             @media print {
+
                 body {
                     width: 100% !important;
+                    margin: 0 !important;
                 }
 
                 #print-area {
                     width: 100% !important;
                     height: auto !important;
                     min-height: auto !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
                     box-shadow: none !important;
                     page-break-after: auto !important;
                 }
+
+                input {
+                    border: none !important;
+                    background: transparent !important;
+                }
             }
         `;
-        document.head.appendChild(printStyle);
 
-        // Trigger print
+        document.head.appendChild(
+            printStyle
+        );
+
         window.print();
 
-        // Show elements again after print dialog is dismissed
         setTimeout(() => {
+
             if (buttons) {
-                buttons.style.display = originalDisplay || "";
+                buttons.style.display =
+                    originalDisplay || "";
             }
 
             printStyle.remove();
+
         }, 1000);
     };
 
+    /*
+    ---------------------------------------------------------
+    SAVE
+    ---------------------------------------------------------
+    
+    Save endpoint can be added later.
+    */
+
+    const handleSave = () => {
+
+        const checksheetData = {
+            product: productId,
+
+            date: sheet.date,
+
+            time1: sheet.time1,
+            initial1: sheet.initial1,
+
+            time2: sheet.time2,
+            initial2: sheet.initial2,
+
+            outerCodingImage:
+                sheet.outerCodingImage,
+
+            productCodingImage:
+                sheet.productCodingImage,
+
+            evidenceImage:
+                sheet.evidenceImage,
+
+            outerCodingImage2:
+                sheet.outerCodingImage2,
+
+            productCodingImage2:
+                sheet.productCodingImage2,
+
+            evidenceImage2:
+                sheet.evidenceImage2,
+        };
+
+        console.log(
+            "Checksheet ready to save:",
+            checksheetData
+        );
+
+        alert(
+            "Checksheet data is ready to save. The database save endpoint still needs to be added."
+        );
+    };
+
+    /*
+    ---------------------------------------------------------
+    LOADING
+    ---------------------------------------------------------
+    */
+
     if (loading) {
-        return <h2>Loading checksheet...</h2>;
+        return (
+            <div className="datecoding-page">
+                <h2>
+                    Loading checksheet...
+                </h2>
+            </div>
+        );
     }
 
-    if (!customerId || !productId) {
-        return <h2>Please select a customer and product first.</h2>;
+    /*
+    ---------------------------------------------------------
+    ERROR
+    ---------------------------------------------------------
+    */
+
+    if (error) {
+        return (
+            <div className="datecoding-page">
+
+                <h2>
+                    Unable to load checksheet
+                </h2>
+
+                <p>{error}</p>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate(
+                            "/jobprocessing"
+                        )
+                    }
+                >
+                    Back to Job Processing
+                </button>
+
+            </div>
+        );
     }
+
+    /*
+    ---------------------------------------------------------
+    NO PRODUCT
+    ---------------------------------------------------------
+    */
+
+    if (!productId) {
+        return (
+            <div className="datecoding-page">
+
+                <h2>
+                    Please select a product first.
+                </h2>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate(
+                            "/jobprocessing"
+                        )
+                    }
+                >
+                    Back to Job Processing
+                </button>
+
+            </div>
+        );
+    }
+
+    /*
+    ---------------------------------------------------------
+    NO SHEET
+    ---------------------------------------------------------
+    */
 
     if (!sheet) {
-        return <h2>Unable to load checksheet.</h2>;
+        return (
+            <div className="datecoding-page">
+
+                <h2>
+                    Unable to load checksheet.
+                </h2>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate(
+                            "/jobprocessing"
+                        )
+                    }
+                >
+                    Back to Job Processing
+                </button>
+
+            </div>
+        );
     }
+
+    /*
+    ---------------------------------------------------------
+    PAGE
+    ---------------------------------------------------------
+    */
 
     return (
         <>
@@ -118,244 +356,414 @@ function ChecksheetEditor() {
                 id="print-area"
                 ref={sheetRef}
             >
-                {/* TITLE */}
+
+                {/* ==================================================
+                    TITLE
+                ================================================== */}
 
                 <h1 className="datecoding-title">
                     DATE CODING & LABEL CHECK SHEET
                 </h1>
 
-                {/* HEADER */}
+
+                {/* ==================================================
+                    HEADER
+                ================================================== */}
 
                 <div className="datecoding-header">
 
                     <div className="header-box product">
-                        <label>Product</label>
-                        <div>{sheet.product}</div>
+
+                        <label>
+                            Product
+                        </label>
+
+                        <div>
+                            {sheet.sku
+                                ? `${sheet.sku} - `
+                                : ""}
+                            {sheet.product}
+                        </div>
+
                     </div>
 
+
                     <div className="header-box date">
-                        <label>Date</label>
+
+                        <label>
+                            Date
+                        </label>
 
                         <input
                             type="date"
-                            value={sheet.date || ""}
+                            value={
+                                sheet.date || ""
+                            }
                             onChange={(e) =>
-                                setSheet({
-                                    ...sheet,
-                                    date: e.target.value,
-                                })
+                                updateSheet(
+                                    "date",
+                                    e.target.value
+                                )
                             }
                         />
+
                     </div>
 
                 </div>
 
-                {/* INSTRUCTIONS */}
+
+                {/* ==================================================
+                    INSTRUCTIONS
+                ================================================== */}
 
                 <div className="instruction-text">
-                    BEST BEFORE & LOT CODE to be attached from
-                    both product and outer packaging. Start of
-                    product check to be done by Quality Manager.
+
+                    BEST BEFORE & LOT CODE to be
+                    attached from both product and
+                    outer packaging. Start of
+                    product check to be done by
+                    Quality Manager.
+
                 </div>
 
-                {/* SECTION 1 */}
+
+                {/* ==================================================
+                    SECTION 1
+                ================================================== */}
 
                 <div className="coding-section">
 
+
+                    {/* OUTER CODING */}
+
                     <div className="outer-coding-box">
+
                         {sheet.outerCodingImage ? (
+
                             <img
-                                src={sheet.outerCodingImage}
+                                src={
+                                    sheet.outerCodingImage
+                                }
                                 alt="Outer Coding"
                                 className="coding-image"
                             />
+
                         ) : (
+
                             <div className="placeholder-text">
                                 OUTER CODING
                             </div>
+
                         )}
+
                     </div>
+
+
+                    {/* PRODUCT COLUMN */}
 
                     <div className="product-column">
 
+
+                        {/* TIME / INITIAL */}
+
                         <div className="time-row">
 
+
                             <div className="time-box">
-                                <label>Time:</label>
+
+                                <label>
+                                    Time:
+                                </label>
 
                                 <input
                                     type="text"
-                                    value={sheet.time1}
+                                    value={
+                                        sheet.time1
+                                    }
                                     onChange={(e) =>
-                                        setSheet({
-                                            ...sheet,
-                                            time1: e.target.value,
-                                        })
+                                        updateSheet(
+                                            "time1",
+                                            e.target.value
+                                        )
                                     }
                                 />
+
                             </div>
 
+
                             <div className="time-box">
-                                <label>Initial:</label>
+
+                                <label>
+                                    Initial:
+                                </label>
 
                                 <input
                                     type="text"
-                                    value={sheet.initial1}
+                                    value={
+                                        sheet.initial1
+                                    }
                                     onChange={(e) =>
-                                        setSheet({
-                                            ...sheet,
-                                            initial1:
-                                                e.target.value,
-                                        })
+                                        updateSheet(
+                                            "initial1",
+                                            e.target.value
+                                        )
                                     }
                                 />
+
                             </div>
 
                         </div>
 
+
+                        {/* PRODUCT CODING */}
+
                         <div className="product-coding-box">
+
                             {sheet.productCodingImage ? (
+
                                 <img
-                                    src={sheet.productCodingImage}
+                                    src={
+                                        sheet.productCodingImage
+                                    }
                                     alt="Product Coding"
                                     className="coding-image"
                                 />
+
                             ) : (
+
                                 <div className="placeholder-text">
                                     PRODUCT CODING
                                 </div>
+
                             )}
+
                         </div>
+
+
+                        {/* CCP NOTE */}
 
                         <div className="ccp-note">
-                            At the start of a production run,
-                            attach evidence of packaging
-                            matching the specification below.
-                            <span> CCP 2</span>
+
+                            At the start of a
+                            production run, attach
+                            evidence of packaging
+                            matching the specification
+                            below.
+
+                            <span>
+                                {" "}CCP 2
+                            </span>
+
                         </div>
 
+
+                        {/* EVIDENCE */}
+
                         <div className="evidence-box">
+
                             {sheet.evidenceImage && (
+
                                 <img
-                                    src={sheet.evidenceImage}
+                                    src={
+                                        sheet.evidenceImage
+                                    }
                                     alt="Evidence"
                                     className="coding-image"
                                 />
+
                             )}
+
                         </div>
 
                     </div>
 
                 </div>
 
-                {/* CHANGE NOTE */}
+
+                {/* ==================================================
+                    CHANGE NOTE
+                ================================================== */}
 
                 <div className="change-note">
-                    Any change of BEST BEFORE and/or LOT CODE
-                    should be attached below with new date
-                    code, time of change and the signature
-                    of supervisor in charge.
+
+                    Any change of BEST BEFORE
+                    and/or LOT CODE should be
+                    attached below with new date
+                    code, time of change and the
+                    signature of supervisor in
+                    charge.
+
                 </div>
 
-                {/* SECTION 2 */}
+
+                {/* ==================================================
+                    SECTION 2
+                ================================================== */}
 
                 <div className="coding-section">
 
+
+                    {/* OUTER CODING */}
+
                     <div className="outer-coding-box">
+
                         {sheet.outerCodingImage2 ? (
+
                             <img
-                                src={sheet.outerCodingImage2}
+                                src={
+                                    sheet.outerCodingImage2
+                                }
                                 alt="Outer Coding"
                                 className="coding-image"
                             />
+
                         ) : (
+
                             <div className="placeholder-text">
                                 OUTER CODING
                             </div>
+
                         )}
+
                     </div>
+
+
+                    {/* PRODUCT COLUMN */}
 
                     <div className="product-column">
 
+
+                        {/* TIME / INITIAL */}
+
                         <div className="time-row">
 
+
                             <div className="time-box">
-                                <label>Time:</label>
+
+                                <label>
+                                    Time:
+                                </label>
 
                                 <input
                                     type="text"
-                                    value={sheet.time2}
+                                    value={
+                                        sheet.time2
+                                    }
                                     onChange={(e) =>
-                                        setSheet({
-                                            ...sheet,
-                                            time2:
-                                                e.target.value,
-                                        })
+                                        updateSheet(
+                                            "time2",
+                                            e.target.value
+                                        )
                                     }
                                 />
+
                             </div>
 
+
                             <div className="time-box">
-                                <label>Initial:</label>
+
+                                <label>
+                                    Initial:
+                                </label>
 
                                 <input
                                     type="text"
-                                    value={sheet.initial2}
+                                    value={
+                                        sheet.initial2
+                                    }
                                     onChange={(e) =>
-                                        setSheet({
-                                            ...sheet,
-                                            initial2:
-                                                e.target.value,
-                                        })
+                                        updateSheet(
+                                            "initial2",
+                                            e.target.value
+                                        )
                                     }
                                 />
+
                             </div>
 
                         </div>
 
+
+                        {/* PRODUCT CODING */}
+
                         <div className="product-coding-box">
+
                             {sheet.productCodingImage2 ? (
+
                                 <img
-                                    src={sheet.productCodingImage2}
+                                    src={
+                                        sheet.productCodingImage2
+                                    }
                                     alt="Product Coding"
                                     className="coding-image"
                                 />
+
                             ) : (
+
                                 <div className="placeholder-text">
                                     PRODUCT CODING
                                 </div>
+
                             )}
+
                         </div>
+
+
+                        {/* CCP NOTE */}
 
                         <div className="ccp-note">
-                            At the start of a production run,
-                            attach evidence of packaging
-                            matching the specification below.
-                            <span> CCP 2</span>
+
+                            At the start of a
+                            production run, attach
+                            evidence of packaging
+                            matching the specification
+                            below.
+
+                            <span>
+                                {" "}CCP 2
+                            </span>
+
                         </div>
 
+
+                        {/* EVIDENCE */}
+
                         <div className="evidence-box">
+
                             {sheet.evidenceImage2 && (
+
                                 <img
-                                    src={sheet.evidenceImage2}
+                                    src={
+                                        sheet.evidenceImage2
+                                    }
                                     alt="Evidence"
                                     className="coding-image"
                                 />
+
                             )}
+
                         </div>
+
                     </div>
 
                 </div>
 
             </div>
 
-            {/* BUTTONS */}
+
+            {/* ==================================================
+                BUTTONS
+            ================================================== */}
 
             <div className="worksheet-buttons no-print">
 
-                <button className="save-btn">
+                <button
+                    className="save-btn"
+                    onClick={handleSave}
+                >
                     Save
                 </button>
+
 
                 <button
                     className="print-btn"
@@ -364,10 +772,13 @@ function ChecksheetEditor() {
                     Print
                 </button>
 
+
                 <button
                     type="button"
                     onClick={() =>
-                        navigate("/jobprocessing")
+                        navigate(
+                            "/jobprocessing"
+                        )
                     }
                 >
                     Cancel

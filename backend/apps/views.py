@@ -56,28 +56,48 @@ def me(request):
 @api_view(["GET"])
 def worksheet_data(request):
 
-    customer_id = request.GET.get("customer")
     product_id = request.GET.get("product")
     report_date = request.GET.get("date")
 
+    # Product is required
+    if not product_id:
+        return Response(
+            {"error": "Product is required"},
+            status=400
+        )
+
     try:
-        customer = Customer.objects.get(id=customer_id)
-        product = Product.objects.get(id=product_id)
+        # Get the product
+        product = Product.objects.select_related(
+            "customer"
+        ).get(id=product_id)
 
-        specification = PackagingSpecification.objects.get(product=product)
+        # Get customer directly from product
+        customer = product.customer
 
+        # Get packaging specification
+        specification = PackagingSpecification.objects.get(
+            product=product
+        )
+
+        # Get packing process steps
         steps = PackingProcessStep.objects.filter(
             packaging_specification=specification
         ).order_by("step_number")
 
-    except Customer.DoesNotExist:
-        return Response({"error": "Customer not found"}, status=404)
-
     except Product.DoesNotExist:
-        return Response({"error": "Product not found"}, status=404)
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
 
     except PackagingSpecification.DoesNotExist:
-        return Response({"error": "Packaging specification not found"}, status=404)
+        return Response(
+            {
+                "error": "Packaging specification not found"
+            },
+            status=404
+        )
 
     return Response({
 
@@ -94,18 +114,14 @@ def worksheet_data(request):
         "date": report_date,
 
         "steps": [
-
             {
-                "step_number": s.step_number,
-                "instruction": s.instruction
+                "step_number": step.step_number,
+                "instruction": step.instruction
             }
-
-            for s in steps
-
+            for step in steps
         ]
 
     })
-
 
 # ---------------------------------------------------------
 # REJECT REPORT DATA
@@ -113,84 +129,19 @@ def worksheet_data(request):
 @api_view(["GET"])
 def reject_report_data(request):
 
-    customer_id = request.GET.get("customer")
     product_id = request.GET.get("product")
     report_date = request.GET.get("date")
 
-    try:
-        customer = Customer.objects.get(id=customer_id)
-        product = Product.objects.get(id=product_id)
-
-    except Customer.DoesNotExist:
-        return Response({"error": "Customer not found"}, status=404)
-
-    except Product.DoesNotExist:
-        return Response({"error": "Product not found"}, status=404)
-
-    return Response({
-
-        "customer": customer.company_name,
-
-        "product": product.name,
-
-        "sku": product.sku,
-
-        "date": report_date,
-
-    })
-
-
-# ---------------------------------------------------------
-# CHECKSHEET DATA
-# ---------------------------------------------------------
-@api_view(["GET"])
-def checksheet_data(request):
-
-    customer_id = request.GET.get("customer")
-    product_id = request.GET.get("product")
-    report_date = request.GET.get("date")
-
-    try:
-        customer = Customer.objects.get(id=customer_id)
-        product = Product.objects.get(id=product_id)
-
-    except Customer.DoesNotExist:
-        return Response({"error": "Customer not found"}, status=404)
-
-    except Product.DoesNotExist:
-        return Response({"error": "Product not found"}, status=404)
-
-    return Response({
-
-        "customer": customer.company_name,
-
-        "product": product.name,
-
-        "sku": product.sku,
-
-        "date": report_date,
-
-    })
-
-# ---------------------------------------------------------
-# STOCKTAKE DATA
-# ---------------------------------------------------------
-@api_view(["GET"])
-def stocktake_data(request):
-
-    customer_id = request.GET.get("customer")
-    product_id = request.GET.get("product")
-    report_date = request.GET.get("date")
-
-    try:
-        customer = Customer.objects.get(id=customer_id)
-        product = Product.objects.get(id=product_id)
-
-    except Customer.DoesNotExist:
+    if not product_id:
         return Response(
-            {"error": "Customer not found"},
-            status=404
+            {"error": "Product is required"},
+            status=400
         )
+
+    try:
+        product = Product.objects.select_related(
+            "customer"
+        ).get(id=product_id)
 
     except Product.DoesNotExist:
         return Response(
@@ -222,13 +173,117 @@ def stocktake_data(request):
         ]
 
     return Response({
-        "customer": customer.company_name,
+
+        "customer": product.customer.company_name,
+
+        "product": product.name,
+
+        "sku": product.sku,
+
+        "date": report_date,
+
+        "components": component_data,
+
+    })
+# ---------------------------------------------------------
+# CHECKSHEET DATA
+# ---------------------------------------------------------
+@api_view(["GET"])
+def checksheet_data(request):
+
+    product_id = request.GET.get("product")
+    report_date = request.GET.get("date")
+
+    if not product_id:
+        return Response(
+            {"error": "Product is required"},
+            status=400
+        )
+
+    try:
+        product = Product.objects.select_related(
+            "customer"
+        ).get(id=product_id)
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    return Response({
+
+        "customer": product.customer.company_name,
+
+        "product": product.name,
+
+        "sku": product.sku,
+
+        "date": report_date,
+
+        # These can be connected to your actual
+        # image fields/files later.
+        "outerCodingImage": "",
+
+        "productCodingImage": "",
+
+        "evidenceImage": "",
+
+        "outerCodingImage2": "",
+
+        "productCodingImage2": "",
+
+        "evidenceImage2": "",
+
+    })
+# ---------------------------------------------------------
+# STOCKTAKE DATA
+# ---------------------------------------------------------
+@api_view(["GET"])
+def stocktake_data(request):
+
+    product_id = request.GET.get("product")
+    report_date = request.GET.get("date")
+
+    try:
+        product = Product.objects.get(id=product_id)
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    packaging_spec = (
+        PackagingSpecification.objects
+        .filter(product=product)
+        .order_by("-id")
+        .first()
+    )
+
+    component_data = []
+
+    if packaging_spec:
+
+        component_data = [
+            {
+                "id": component.id,
+                "component_sku": component.component_sku,
+                "component_name": component.component_name,
+                "supplier": component.supplier,
+                "units_per_piece": component.units_per_piece,
+                "units_per_outer": component.units_per_outer,
+            }
+            for component in packaging_spec.components.all()
+        ]
+
+    return Response({
+        "customer": product.customer.company_name,
         "product": product.name,
         "sku": product.sku,
         "date": report_date,
         "components": component_data,
     })
-
 # ---------------------------------------------------------
 # CUSTOMER VIEWSET
 # ---------------------------------------------------------
@@ -703,23 +758,22 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
 # ---------------------------------------------------------
 # TRACEABILITY DATA
 # ---------------------------------------------------------
-
 @api_view(["GET"])
 def traceability_data(request):
 
-    customer_id = request.GET.get("customer")
     product_id = request.GET.get("product")
     report_date = request.GET.get("date")
 
-    try:
-        customer = Customer.objects.get(id=customer_id)
-        product = Product.objects.get(id=product_id)
-
-    except Customer.DoesNotExist:
+    if not product_id:
         return Response(
-            {"error": "Customer not found"},
-            status=404
+            {"error": "Product is required"},
+            status=400
         )
+
+    try:
+        product = Product.objects.select_related(
+            "customer"
+        ).get(id=product_id)
 
     except Product.DoesNotExist:
         return Response(
@@ -744,17 +798,23 @@ def traceability_data(request):
                 "component_sku": component.component_sku,
                 "component_name": component.component_name,
             }
-            for component in packaging_spec.components.all()
+            for component
+            in packaging_spec.components.all()
         ]
 
     return Response({
-        "customer": customer.company_name,
-        "product": product.name,
-        "sku": product.sku,
-        "date": report_date,
-        "components": component_data,
-    })
 
+        "customer": product.customer.company_name,
+
+        "product": product.name,
+
+        "sku": product.sku,
+
+        "date": report_date,
+
+        "components": component_data,
+
+    })
 # ---------------------------------------------------------
 # PACKAGING SPECIFICATION VIEWSET
 # ---------------------------------------------------------

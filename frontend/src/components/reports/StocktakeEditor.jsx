@@ -2,42 +2,60 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../../styles/stock.css";
 
-
 function StocktakeEditor() {
-
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const customerId = searchParams.get("customer");
+    const stocktakeRef = useRef(null);
+
     const productId = searchParams.get("product");
-    const reportDate = searchParams.get("date");
+    const reportDate =
+        searchParams.get("date") ||
+        new Date().toISOString().split("T")[0];
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
     const [components, setComponents] = useState([]);
+
     const [stock, setStock] = useState({
         product: "",
         sku: "",
-        date: reportDate || "",
+        date: reportDate,
         signature: "",
-
-        warehouse1: "",
-        warehouse2: "",
-
-        room: "",
-        roomTotal: "",
+        balanceOnSystem: "",
     });
+
+    /*
+    ---------------------------------------------------------
+    LOAD STOCKTAKE
+    ---------------------------------------------------------
+    */
+
     useEffect(() => {
-        if (customerId && productId) {
-            loadStocktake();
+        if (!productId) {
+            setError("No product selected.");
+            setLoading(false);
+            return;
         }
-    }, [customerId, productId, reportDate]);
+
+        loadStocktake();
+    }, [productId, reportDate]);
 
     async function loadStocktake() {
         try {
+            setLoading(true);
+            setError("");
 
             const response = await fetch(
-                `/api/job-processing/stocktake/?customer=${customerId}&product=${productId}&date=${reportDate}`
+                `/api/job-processing/stocktake/?product=${productId}&date=${reportDate}`
             );
 
             if (!response.ok) {
-                throw new Error("Failed to load stocktake");
+                const errorData = await response.json().catch(() => null);
+
+                throw new Error(
+                    errorData?.error || "Failed to load stocktake"
+                );
             }
 
             const data = await response.json();
@@ -45,30 +63,102 @@ function StocktakeEditor() {
             console.log("Stocktake API:", data);
 
             setStock({
-                product: data.product,
-                sku: data.sku,
-                date: data.date,
+                product: data.product || "",
+                sku: data.sku || "",
+                date: data.date || reportDate,
                 signature: "",
+                balanceOnSystem: "",
             });
 
-            setComponents(data.components || []);
+            /*
+             * Add empty editable fields to every component.
+             *
+             * These values are NOT coming from the database yet.
+             * They are values the user enters on the stocktake sheet.
+             */
+
+            const loadedComponents = (data.components || []).map(
+                (component) => ({
+                    ...component,
+
+                    batchNo: "",
+                    bestBefore: "",
+                    qtyPerPallet: "",
+                    qtyInRoom: "",
+                    boxes: "",
+                    singles: "",
+                    room: "",
+                    warehouse: "",
+                    total: "",
+                })
+            );
+
+            setComponents(loadedComponents);
 
         } catch (err) {
-            console.error(err);
+            console.error("Stocktake error:", err);
+            setError(err.message || "Failed to load stocktake.");
+        } finally {
+            setLoading(false);
         }
     }
-    
+
+    /*
+    ---------------------------------------------------------
+    UPDATE HEADER
+    ---------------------------------------------------------
+    */
+
+    function updateStock(field, value) {
+        setStock((previous) => ({
+            ...previous,
+            [field]: value,
+        }));
+    }
+
+    /*
+    ---------------------------------------------------------
+    UPDATE COMPONENT ROW
+    ---------------------------------------------------------
+    */
+
+    function updateComponent(index, field, value) {
+        setComponents((previous) => {
+            const updated = [...previous];
+
+            updated[index] = {
+                ...updated[index],
+                [field]: value,
+            };
+
+            return updated;
+        });
+    }
+
+    /*
+    ---------------------------------------------------------
+    PRINT
+    ---------------------------------------------------------
+    */
+
     const handlePrint = () => {
-        // Hide elements that should not be printed
-        const buttons = document.querySelector(".worksheet-buttons");
-        const originalDisplay = buttons?.style.display;
+        const buttons = document.querySelector(
+            ".stocktake-buttons"
+        );
+
+        const originalDisplay =
+            buttons?.style.display;
 
         if (buttons) {
             buttons.style.display = "none";
         }
 
-        const printStyle = document.createElement("style");
-        printStyle.id = "worksheet-portrait-print";
+        const printStyle =
+            document.createElement("style");
+
+        printStyle.id =
+            "stocktake-landscape-print";
+
         printStyle.innerHTML = `
             @page {
                 size: A4 landscape !important;
@@ -76,124 +166,534 @@ function StocktakeEditor() {
             }
 
             @media print {
+
                 body {
                     width: 100% !important;
+                    margin: 0 !important;
                 }
 
                 #print-area {
                     width: 100% !important;
-                    height: auto !important;
                     min-height: auto !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
                     box-shadow: none !important;
-                    page-break-after: auto !important;
+                }
+
+                input {
+                    border: none !important;
+                    background: transparent !important;
                 }
             }
         `;
+
         document.head.appendChild(printStyle);
 
-        // Trigger print
         window.print();
 
-        // Show elements again after print dialog is dismissed
         setTimeout(() => {
             if (buttons) {
-                buttons.style.display = originalDisplay || "";
+                buttons.style.display =
+                    originalDisplay || "";
             }
 
             printStyle.remove();
         }, 1000);
     };
 
+    /*
+    ---------------------------------------------------------
+    SAVE
+    ---------------------------------------------------------
+    
+    At the moment your backend does not have a stocktake
+    SAVE endpoint.
+
+    So this button currently shows what would be saved.
+
+    Once we create the backend model/API, this function
+    can POST the data to Django.
+    */
+
+    const handleSave = () => {
+        const stocktakeData = {
+            product: productId,
+            date: stock.date,
+            signature: stock.signature,
+            balanceOnSystem:
+                stock.balanceOnSystem,
+
+            components: components.map(
+                (component) => ({
+                    component_id: component.id,
+                    component_sku:
+                        component.component_sku,
+                    component_name:
+                        component.component_name,
+
+                    batch_no:
+                        component.batchNo,
+
+                    best_before:
+                        component.bestBefore,
+
+                    qty_per_pallet:
+                        component.qtyPerPallet,
+
+                    qty_in_room:
+                        component.qtyInRoom,
+
+                    boxes:
+                        component.boxes,
+
+                    singles:
+                        component.singles,
+
+                    room:
+                        component.room,
+
+                    warehouse:
+                        component.warehouse,
+
+                    total:
+                        component.total,
+                })
+            ),
+        };
+
+        console.log(
+            "Stocktake ready to save:",
+            stocktakeData
+        );
+
+        alert(
+            "Stocktake data is ready to save. The database save endpoint still needs to be added."
+        );
+    };
+
+    /*
+    ---------------------------------------------------------
+    LOADING
+    ---------------------------------------------------------
+    */
+
+    if (loading) {
+        return (
+            <div className="stocktake-page">
+                <h2>Loading stocktake...</h2>
+            </div>
+        );
+    }
+
+    /*
+    ---------------------------------------------------------
+    ERROR
+    ---------------------------------------------------------
+    */
+
+    if (error) {
+        return (
+            <div className="stocktake-page">
+                <h2>Unable to load stocktake</h2>
+
+                <p>{error}</p>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate("/jobprocessing")
+                    }
+                >
+                    Back to Job Processing
+                </button>
+            </div>
+        );
+    }
+
+    /*
+    ---------------------------------------------------------
+    NO PRODUCT
+    ---------------------------------------------------------
+    */
+
+    if (!productId) {
+        return (
+            <div className="stocktake-page">
+                <h2>Please select a product first.</h2>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate("/jobprocessing")
+                    }
+                >
+                    Back to Job Processing
+                </button>
+            </div>
+        );
+    }
+
+    /*
+    ---------------------------------------------------------
+    PAGE
+    ---------------------------------------------------------
+    */
+
     return (
         <>
-            <div className="stocktake-page" id="print-area">
+            <div
+                className="stocktake-page"
+                id="print-area"
+                ref={stocktakeRef}
+            >
                 <h1 className="worksheet-title">
                     R21 STOCKTAKE CHECKLIST
                 </h1>
 
                 {/* HEADER */}
+
                 <div className="stocktake-top">
 
                     <div className="job-line">
                         <strong>JOB:</strong>
-                        <span>{stock.sku} - {stock.product}</span>
+
+                        <span>
+                            {stock.sku} -{" "}
+                            {stock.product}
+                        </span>
                     </div>
 
                     <div className="signature-line">
-                        <strong>SIGNATURE:</strong>
+                        <strong>
+                            SIGNATURE:
+                        </strong>
+
                         <input
-                            value={stock.signature}
+                            value={
+                                stock.signature
+                            }
                             onChange={(e) =>
-                                setStock({
-                                    ...stock,
-                                    signature: e.target.value,
-                                })
+                                updateStock(
+                                    "signature",
+                                    e.target.value
+                                )
                             }
                         />
                     </div>
 
                     <div className="date-line">
                         <strong>DATE:</strong>
+
                         <input
                             type="date"
                             value={stock.date}
                             onChange={(e) =>
-                                setStock({
-                                    ...stock,
-                                    date: e.target.value,
-                                })
+                                updateStock(
+                                    "date",
+                                    e.target.value
+                                )
                             }
                         />
                     </div>
 
                     <div className="balance-line">
-                        <strong>Bal on System:</strong>
-                        <input />
+                        <strong>
+                            Bal on System:
+                        </strong>
+
+                        <input
+                            value={
+                                stock.balanceOnSystem
+                            }
+                            onChange={(e) =>
+                                updateStock(
+                                    "balanceOnSystem",
+                                    e.target.value
+                                )
+                            }
+                        />
                     </div>
 
                 </div>
 
                 {/* MAIN TABLE */}
-                <table className="physical-stock-table">
-                    <thead>
-                        <tr>
-                            <th colSpan="2">PACKAGING</th>
-                            <th colSpan="6">ROOM COUNT</th>
-                            <th colSpan="3">OFFICE USE ONLY</th>
 
+                <table className="physical-stock-table">
+
+                    <thead>
+
+                        <tr>
+                            <th colSpan="2">
+                                PACKAGING
+                            </th>
+
+                            <th colSpan="6">
+                                ROOM COUNT
+                            </th>
+
+                            <th colSpan="3">
+                                OFFICE USE ONLY
+                            </th>
                         </tr>
+
                         <tr>
                             <th>CODE</th>
-                            <th>DESCRIPTION</th>
-                            <th>BATCH NO.</th>
-                            <th>BEST BEFORE</th>
-                            <th>QTY / PALLET</th>
-                            <th>QTY IN ROOM</th>
-                            <th>BOXES</th>
-                            <th>SINGLES</th>
-                            <th>ROOM</th>
-                            <th>WAREHOUSE</th>
-                            <th>TOTAL</th>
+
+                            <th>
+                                DESCRIPTION
+                            </th>
+
+                            <th>
+                                BATCH NO.
+                            </th>
+
+                            <th>
+                                BEST BEFORE
+                            </th>
+
+                            <th>
+                                QTY / PALLET
+                            </th>
+
+                            <th>
+                                QTY IN ROOM
+                            </th>
+
+                            <th>
+                                BOXES
+                            </th>
+
+                            <th>
+                                SINGLES
+                            </th>
+
+                            <th>
+                                ROOM
+                            </th>
+
+                            <th>
+                                WAREHOUSE
+                            </th>
+
+                            <th>
+                                TOTAL
+                            </th>
                         </tr>
+
                     </thead>
 
                     <tbody>
+
                         {components.length > 0 ? (
-                            components.map((component) => (
-                                <tr key={component.id}>
-                                    <td>{component.component_sku}</td>
-                                    <td>{component.component_name}</td>
-                                    <td><input /></td>
-                                    <td><input /></td>
-                                    <td><input /></td>
-                                    <td><input /></td>
-                                    <td><input /></td>
-                                    <td><input /></td>
-                                    <td><input /></td>
-                                    <td><input /></td>
-                                    <td><input /></td>
-                                </tr>
-                            ))
+
+                            components.map(
+                                (component, index) => (
+
+                                    <tr
+                                        key={
+                                            component.id
+                                        }
+                                    >
+
+                                        {/* CODE */}
+
+                                        <td>
+                                            {
+                                                component.component_sku
+                                            }
+                                        </td>
+
+                                        {/* DESCRIPTION */}
+
+                                        <td>
+                                            {
+                                                component.component_name
+                                            }
+                                        </td>
+
+                                        {/* BATCH */}
+
+                                        <td>
+                                            <input
+                                                value={
+                                                    component.batchNo
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "batchNo",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        {/* BEST BEFORE */}
+
+                                        <td>
+                                            <input
+                                                // type="date"
+                                                value={
+                                                    component.bestBefore
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "bestBefore",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        {/* QTY / PALLET */}
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={
+                                                    component.qtyPerPallet
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "qtyPerPallet",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        {/* QTY IN ROOM */}
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={
+                                                    component.qtyInRoom
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "qtyInRoom",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        {/* BOXES */}
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={
+                                                    component.boxes
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "boxes",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        {/* SINGLES */}
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={
+                                                    component.singles
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "singles",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        {/* ROOM */}
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={
+                                                    component.room
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "room",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        {/* WAREHOUSE */}
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={
+                                                    component.warehouse
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "warehouse",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        {/* TOTAL */}
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={
+                                                    component.total
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    updateComponent(
+                                                        index,
+                                                        "total",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                    </tr>
+                                )
+                            )
+
                         ) : (
 
                             <tr>
@@ -203,14 +703,70 @@ function StocktakeEditor() {
                             </tr>
 
                         )}
+                    {/* EXTRA MANUAL ROWS */}
+                        {Array.from({ length: 5 }).map((_, index) => (
+                            <tr key={`manual-${index}`}>
+
+                                <td>
+                                    <input />
+                                </td>
+
+                                <td>
+                                    <input />
+                                </td>
+
+                                <td>
+                                    <input />
+                                </td>
+
+                                <td>
+                                    <input />
+                                </td>
+
+                                <td>
+                                    <input type="number" />
+                                </td>
+
+                                <td>
+                                    <input type="number" />
+                                </td>
+
+                                <td>
+                                    <input type="number" />
+                                </td>
+
+                                <td>
+                                    <input type="number" />
+                                </td>
+
+                                <td>
+                                    <input type="number" />
+                                </td>
+
+                                <td>
+                                    <input type="number" />
+                                </td>
+
+                                <td>
+                                    <input type="number" />
+                                </td>
+
+                            </tr>
+                        ))}
                     </tbody>
+
                 </table>
+
             </div>
 
             {/* BUTTONS */}
+
             <div className="stocktake-buttons no-print">
 
-                <button className="save-btn">
+                <button
+                    className="save-btn"
+                    onClick={handleSave}
+                >
                     Save
                 </button>
 
@@ -229,6 +785,7 @@ function StocktakeEditor() {
                 >
                     Cancel
                 </button>
+
             </div>
         </>
     );

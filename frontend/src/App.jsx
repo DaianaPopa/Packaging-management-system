@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import AdminRoute from "./components/layout/AdminRoute";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
+import SideBar from "./components/layout/SideBar";
 
 // Reports
 import WorksheetEditor from "./components/reports/WorksheetEditor";
@@ -21,7 +22,7 @@ import CustomerDetail from "./pages/CustomerDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
-import DataAnalysis from "./pages/DataAnalysis";
+import DataAnalytics from "./pages/DataAnalytics";
 
 function App() {
   return (
@@ -86,8 +87,8 @@ function App() {
                 />
 
                  <Route
-                  path="/dataAnalysis"
-                  element={<DataAnalysis />}
+                  path="/dataAnalytics"
+                  element={<DataAnalytics />}
                 />
 
                 <Route

@@ -1508,3 +1508,270 @@ textarea:disabled {
   border: 1px solid #ddd;
   border-radius: 10px;
 }
+
+/* ==================================================
+   DATA ANALYTICS
+================================================== */
+
+.analytics-page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 30px;
+    box-sizing: border-box;
+    background: #f5f6f8;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #222;
+}
+
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.analytics-header {
+    margin-bottom: 25px;
+}
+
+.analytics-header h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.analytics-header p {
+    margin: 6px 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+
+/* ==================================================
+   SUMMARY CARDS
+================================================== */
+
+.analytics-cards {
+    display: grid;
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.analytics-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.analytics-card-title {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.analytics-card-value {
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.analytics-card-description {
+    font-size: 12px;
+    color: #888;
+}
+
+
+/* ==================================================
+   SECTIONS
+================================================== */
+
+.analytics-section {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+
+.analytics-section-header {
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.analytics-section-header h2 {
+    margin: 0;
+    font-size: 19px;
+}
+
+.analytics-section-header p {
+    margin: 5px 0 0;
+    color: #777;
+    font-size: 13px;
+}
+
+
+/* ==================================================
+   TABLE
+================================================== */
+
+.analytics-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.analytics-table th {
+    text-align: left;
+    background: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+    padding: 12px 15px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.analytics-table td {
+    padding: 13px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+}
+
+.analytics-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.sku-cell {
+    font-weight: bold;
+}
+
+.number-cell {
+    text-align: center;
+}
+
+
+/* ==================================================
+   STATUS
+================================================== */
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.status-completed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-partial {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-not-started {
+    background: #f1f1f1;
+    color: #666;
+}
+
+
+/* ==================================================
+   PRODUCT RANKING
+================================================== */
+
+.product-ranking {
+    padding: 20px;
+}
+
+.ranking-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.ranking-row:last-child {
+    margin-bottom: 0;
+}
+
+.ranking-position {
+    width: 25px;
+    font-weight: bold;
+    color: #777;
+    text-align: center;
+}
+
+.ranking-product {
+    width: 220px;
+    flex-shrink: 0;
+}
+
+.ranking-name {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.ranking-description {
+    font-size: 11px;
+    color: #777;
+    margin-top: 3px;
+}
+
+.ranking-bar-container {
+    flex: 1;
+    height: 12px;
+    background: #eee;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.ranking-bar {
+    height: 100%;
+    background: #1976d2;
+    border-radius: 6px;
+}
+
+.ranking-number {
+    width: 50px;
+    font-weight: bold;
+    text-align: right;
+}
+
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media (max-width: 1100px) {
+
+    .analytics-cards {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .analytics-page {
+        padding: 15px;
+    }
+
+    .analytics-cards {
+        grid-template-columns:
+            repeat(1, 1fr);
+    }
+
+    .ranking-product {
+        width: 150px;
+    }
+
+}
