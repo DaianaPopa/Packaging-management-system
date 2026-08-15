@@ -192,13 +192,10 @@ function ChecksheetEditor() {
     ---------------------------------------------------------
     SAVE
     ---------------------------------------------------------
-    
-    Save endpoint can be added later.
     */
+    const handleSave = async () => {
 
-    const handleSave = () => {
-
-        const checksheetData = {
+    const checksheetData = {
             product: productId,
 
             date: sheet.date,
@@ -228,16 +225,41 @@ function ChecksheetEditor() {
                 sheet.evidenceImage2,
         };
 
-        console.log(
-            "Checksheet ready to save:",
-            checksheetData
-        );
+        try {
 
-        alert(
-            "Checksheet data is ready to save. The database save endpoint still needs to be added."
-        );
+            const response = await fetch(
+                "/api/job-processing/checksheet/save/",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                    },
+
+                    body: JSON.stringify(
+                        checksheetData
+                    ),
+                }
+            );
+
+            const result =
+                await response.json();
+
+            if (!response.ok) {
+                alert(result.error);
+                return;
+            }
+
+            alert(result.message);
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("Save failed");
+        }
     };
-
     /*
     ---------------------------------------------------------
     LOADING

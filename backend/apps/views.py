@@ -8,6 +8,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.utils import timezone
+from datetime import datetime
+from django.db.models import Count
+
 
 from .models import (
     Customer,
@@ -16,7 +19,8 @@ from .models import (
     PackagingSpecification,
     Component,
     PackingProcessStep,
-    UserProfile
+    UserProfile,
+    Workpack
 )
 
 from .serializers import (
@@ -50,6 +54,163 @@ def me(request):
         "username": request.user.username,
         "role": profile.role,
     })
+    
+
+# ---------------------------------------------------------
+# WORKPACK DATA
+# ---------------------------------------------------------
+@api_view(["GET"])
+def workpack_data(request):
+
+    product_id = request.GET.get("product")
+
+    if not product_id:
+        return Response(
+            {"error": "Product is required"},
+            status=400
+        )
+
+    try:
+
+        workpack = (
+            Workpack.objects
+            .filter(product_id=product_id)
+            .order_by("-date")
+            .first()
+        )
+
+        if not workpack:
+            return Response(
+                {"error": "No workpack found"},
+                status=404
+            )
+
+    except Exception as e:
+
+        return Response(
+            {"error": str(e)},
+            status=500
+        )
+
+    return Response({
+        "worksheet": workpack.worksheet_data,
+        "traceability": workpack.traceability_data,
+        "reject_report": workpack.reject_report_data,
+        "stocktake": workpack.stocktake_data,
+        "checksheet": workpack.date_coding_data,
+    })
+# ---------------------------------------------------------
+# ANALYTICS DATA
+# ---------------------------------------------------------
+@api_view(["GET"])
+def analytics_data(request):
+
+    total_products = Product.objects.count()
+    total_workpacks = Workpack.objects.count()
+
+    completed = 0
+    partial = 0
+
+    for workpack in Workpack.objects.all():
+
+        sections = [
+            workpack.worksheet_data,
+            workpack.traceability_data,
+            workpack.reject_report_data,
+            workpack.stocktake_data,
+            workpack.date_coding_data,
+        ]
+
+        completed_sections = sum(
+            1 for section in sections if section
+        )
+
+        if completed_sections == len(sections):
+            completed += 1
+
+        elif completed_sections > 0:
+            partial += 1
+
+    products_with_workpacks = (
+        Workpack.objects
+        .values("product_id")
+        .distinct()
+        .count()
+    )
+
+    not_started = max(
+        0,
+        total_products - products_with_workpacks
+    )
+
+    products = []
+
+    for product in Product.objects.all():
+
+        workpack_count = Workpack.objects.filter(
+            product=product
+        ).count()
+
+        latest_workpack = (
+            Workpack.objects
+            .filter(product=product)
+            .order_by("-date")
+            .first()
+        )
+
+        if workpack_count == 0:
+
+            status = "Not Started"
+            last_created = "-"
+
+        else:
+
+            sections = [
+                latest_workpack.worksheet_data,
+                latest_workpack.traceability_data,
+                latest_workpack.reject_report_data,
+                latest_workpack.stocktake_data,
+                latest_workpack.date_coding_data,
+            ]
+
+            completed_sections = sum(
+                1 for section in sections if section
+            )
+
+            if completed_sections == len(sections):
+                status = "Completed"
+            else:
+                status = "Partial"
+
+            last_created = latest_workpack.date
+
+        products.append({
+            "sku": product.sku,
+            "product": product.name,
+            "customer": getattr(
+                product.customer,
+                "company_name",
+                ""
+            ),
+            "workpacks": workpack_count,
+            "status": status,
+            "last_created": last_created,
+        })
+
+    products.sort(
+        key=lambda x: x["workpacks"],
+        reverse=True
+    )
+
+    return Response({
+        "total_workpacks": total_workpacks,
+        "total_products": total_products,
+        "completed": completed,
+        "partial": partial,
+        "not_started": not_started,
+        "products": products,
+    })
+
 # ---------------------------------------------------------
 # WORKSHEET DATA
 # ---------------------------------------------------------
@@ -122,6 +283,46 @@ def worksheet_data(request):
         ]
 
     })
+    
+@api_view(["POST"])
+def save_worksheet(request):
+
+    product_id = request.data.get("product")
+    report_date = request.data.get("date")
+
+    if not product_id:
+        return Response(
+            {"error": "Product is required"},
+            status=400
+        )
+
+    if not report_date:
+        return Response(
+            {"error": "Date is required"},
+            status=400
+        )
+
+    try:
+        product = Product.objects.get(id=product_id)
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    workpack, created = Workpack.objects.get_or_create(
+        product=product,
+        date=report_date
+    )
+
+    workpack.worksheet_data = request.data
+
+    workpack.save()
+
+    return Response({
+        "message": "Worksheet saved successfully"
+    })
 
 # ---------------------------------------------------------
 # REJECT REPORT DATA
@@ -185,6 +386,47 @@ def reject_report_data(request):
         "components": component_data,
 
     })
+    
+@api_view(["POST"])
+def save_reject_report(request):
+
+    product_id = request.data.get("product")
+    report_date = request.data.get("date")
+
+    if not product_id:
+        return Response(
+            {"error": "Product is required"},
+            status=400
+        )
+
+    if not report_date:
+        return Response(
+            {"error": "Date is required"},
+            status=400
+        )
+
+    try:
+        product = Product.objects.get(id=product_id)
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    workpack, _ = Workpack.objects.get_or_create(
+        product=product,
+        date=report_date
+    )
+
+    workpack.reject_report_data = request.data
+
+    workpack.save()
+
+    return Response({
+        "message": "Reject report saved successfully"
+    })
+    
 # ---------------------------------------------------------
 # CHECKSHEET DATA
 # ---------------------------------------------------------
@@ -236,6 +478,48 @@ def checksheet_data(request):
         "evidenceImage2": "",
 
     })
+
+@api_view(["POST"])
+def save_checksheet(request):
+
+    product_id = request.data.get("product")
+    report_date = request.data.get("date")
+
+    if not product_id:
+        return Response(
+            {"error": "Product is required"},
+            status=400
+        )
+
+    if not report_date:
+        return Response(
+            {"error": "Date is required"},
+            status=400
+        )
+
+    try:
+        product = Product.objects.get(
+            id=product_id
+        )
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    workpack, _ = Workpack.objects.get_or_create(
+        product=product,
+        date=report_date
+    )
+
+    workpack.date_coding_data = request.data
+
+    workpack.save()
+
+    return Response({
+        "message": "Checksheet saved successfully"
+    })
 # ---------------------------------------------------------
 # STOCKTAKE DATA
 # ---------------------------------------------------------
@@ -283,6 +567,48 @@ def stocktake_data(request):
         "sku": product.sku,
         "date": report_date,
         "components": component_data,
+    })
+    
+@api_view(["POST"])
+def save_stocktake(request):
+
+    product_id = request.data.get("product")
+    report_date = request.data.get("date")
+
+    if not product_id:
+        return Response(
+            {"error": "Product is required"},
+            status=400
+        )
+
+    if not report_date:
+        return Response(
+            {"error": "Date is required"},
+            status=400
+        )
+
+    try:
+        product = Product.objects.get(
+            id=product_id
+        )
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    workpack, _ = Workpack.objects.get_or_create(
+        product=product,
+        date=report_date
+    )
+
+    workpack.stocktake_data = request.data
+
+    workpack.save()
+
+    return Response({
+        "message": "Stocktake saved successfully"
     })
 # ---------------------------------------------------------
 # CUSTOMER VIEWSET
@@ -814,6 +1140,48 @@ def traceability_data(request):
 
         "components": component_data,
 
+    })
+
+@api_view(["POST"])
+def save_traceability(request):
+
+    product_id = request.data.get("product")
+    report_date = request.data.get("date")
+
+    if not product_id:
+        return Response(
+            {"error": "Product is required"},
+            status=400
+        )
+
+    if not report_date:
+        return Response(
+            {"error": "Date is required"},
+            status=400
+        )
+
+    try:
+        product = Product.objects.get(
+            id=product_id
+        )
+
+    except Product.DoesNotExist:
+        return Response(
+            {"error": "Product not found"},
+            status=404
+        )
+
+    workpack, _ = Workpack.objects.get_or_create(
+        product=product,
+        date=report_date
+    )
+
+    workpack.traceability_data = request.data
+
+    workpack.save()
+
+    return Response({
+        "message": "Traceability saved successfully"
     })
 # ---------------------------------------------------------
 # PACKAGING SPECIFICATION VIEWSET

@@ -47,60 +47,6 @@ function Settings() {
                 Settings
             </h1>
 
-            {/* COMPANY INFORMATION */}
-            <div className="settings-card">
-                <h2>
-                    🏢 Company Information
-                </h2>
-                <div className="settings-grid">
-                    <div className="form-group">
-                        <label>
-                            Company Name
-                        </label>
-                        <input
-                            name="companyName"
-                            value={settings.companyName}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>
-                            Company Email
-                        </label>
-                        <input
-                            type="email"
-                            name="companyEmail"
-                            value={settings.companyEmail}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>
-                            Phone Number
-                        </label>
-                        <input
-                            name="phone"
-                            value={settings.phone}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="form-group full-width">
-                        <label>
-                            Address
-                        </label>
-                        <textarea
-                            name="address"
-                            rows="4"
-                            value={settings.address}
-                            onChange={handleChange}
-                        />
-                    </div>
-                </div>
-            </div>
-
             {/* USER PROFILE */}
             <div className="settings-card">
                 <h2>
@@ -194,38 +140,6 @@ function Settings() {
                             onChange={handleChange}
                         />
                     </div>
-                </div>
-            </div>
-
-            {/* APPEARANCE */}
-            <div className="settings-card">
-                <h2>
-                    🎨 Appearance
-                </h2>
-                <div className="theme-options">
-                    <label>
-                        <input
-                            type="radio"
-                            name="theme"
-                            value="light"
-                            checked={
-                                settings.theme === "light"
-                            }
-                            onChange={handleChange}
-                        />Light
-                    </label>
-
-                    <label>
-                        <input
-                            type="radio"
-                            name="theme"
-                            value="dark"
-                            checked={
-                                settings.theme === "dark"
-                            }
-                            onChange={handleChange}
-                        />Dark
-                    </label>
                 </div>
             </div>
 

@@ -400,94 +400,57 @@ function RejectReportEditor() {
     SAVE
     =========================================================
     */
-
-    const handleSave = () => {
-
+    const handleSave = async () => {
         const rejectReportData = {
-
             product: productId,
-
             date: report.date,
-
-            /*
-            -------------------------------------------------
-            PACKAGING
-            -------------------------------------------------
-            */
-
-            packagingRejects:
-                packagingRejects.map(
-                    (row) => ({
-                        type: row.type,
-
-                        component_id:
-                            row.type === "component"
-                                ? row.id.replace(
-                                      "component-",
-                                      ""
-                                  )
-                                : null,
-
-                        sku:
-                            row.sku,
-
-                        name:
-                            row.name,
-
-                        incoming:
-                            row.incoming,
-
-                        incoming_reason:
-                            row.incomingReason,
-
-                        inhouse:
-                            row.inhouse,
-
-                        inhouse_reason:
-                            row.inhouseReason,
-                    })
-                ),
-
-            /*
-            -------------------------------------------------
-            PRODUCT
-            -------------------------------------------------
-            */
-
-            productRejects:
-                productRejects.map(
-                    (row) => ({
-                        type: row.type,
-
-                        sku:
-                            row.sku,
-
-                        name:
-                            row.name,
-
-                        incoming:
-                            row.incoming,
-
-                        incoming_reason:
-                            row.incomingReason,
-
-                        inhouse:
-                            row.inhouse,
-
-                        inhouse_reason:
-                            row.inhouseReason,
-                    })
-                ),
+            packagingRejects: packagingRejects.map((row) => ({
+                type: row.type,
+                component_id:
+                    row.type === "component"
+                        ? row.id.replace("component-", "")
+                        : null,
+                sku: row.sku,
+                name: row.name,
+                incoming: row.incoming,
+                incoming_reason: row.incomingReason,
+                inhouse: row.inhouse,
+                inhouse_reason: row.inhouseReason,
+            })),
+            productRejects: productRejects.map((row) => ({
+                type: row.type,
+                sku: row.sku,
+                name: row.name,
+                incoming: row.incoming,
+                incoming_reason: row.incomingReason,
+                inhouse: row.inhouse,
+                inhouse_reason: row.inhouseReason,
+            })),
         };
 
-        console.log(
-            "Reject report ready to save:",
-            rejectReportData
-        );
+        console.log("Reject report ready to save:", rejectReportData);
 
-        alert(
-            "Reject report data is ready to save. The database save endpoint still needs to be added."
-        );
+        try {
+            const response = await fetch("/api/job-processing/reject-report/save/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(rejectReportData),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                alert(result.error);
+                return;
+            }
+
+            alert(result.message);
+        } catch (error) {
+            console.error(error);
+            alert("Save failed");
+        }
     };
 
     /*

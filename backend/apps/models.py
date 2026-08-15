@@ -175,3 +175,33 @@ class PackingProcessStep(models.Model):
 
     def __str__(self):
         return f"Step {self.step_number}"
+    
+class Workpack(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="workpacks"
+    )
+
+    date = models.DateField()
+
+    worksheet_data = models.JSONField(default=dict, blank=True)
+    traceability_data = models.JSONField(default=dict, blank=True)
+    reject_report_data = models.JSONField(default=dict, blank=True)
+    date_coding_data = models.JSONField(default=dict, blank=True)
+    stocktake_data = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "date"],
+                name="unique_product_workpack_date"
+            )
+        ]
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"{self.product.sku} - {self.date}"

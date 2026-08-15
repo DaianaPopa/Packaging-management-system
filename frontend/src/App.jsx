@@ -23,6 +23,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import DataAnalytics from "./pages/DataAnalytics";
+import PrintWorkpack from "./pages/PrintWorkpack";
 
 function App() {
   return (
@@ -119,6 +120,10 @@ function App() {
                 <Route
                   path="/stocktake"
                   element={<StocktakeEditor />}
+                />
+                <Route
+                    path="/print-workpack"
+                    element={<PrintWorkpack />}
                 />
 
               </Routes>

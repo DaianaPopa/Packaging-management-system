@@ -72,10 +72,7 @@ function StocktakeEditor() {
 
             /*
              * Add empty editable fields to every component.
-             *
-             * These values are NOT coming from the database yet.
-             * They are values the user enters on the stocktake sheet.
-             */
+            */
 
             const loadedComponents = (data.components || []).map(
                 (component) => ({
@@ -205,72 +202,95 @@ function StocktakeEditor() {
     ---------------------------------------------------------
     SAVE
     ---------------------------------------------------------
-    
-    At the moment your backend does not have a stocktake
-    SAVE endpoint.
-
-    So this button currently shows what would be saved.
-
-    Once we create the backend model/API, this function
-    can POST the data to Django.
     */
+    const handleSave = async () => {
 
-    const handleSave = () => {
-        const stocktakeData = {
-            product: productId,
-            date: stock.date,
-            signature: stock.signature,
-            balanceOnSystem:
-                stock.balanceOnSystem,
+    const stocktakeData = {
+        product: productId,
 
-            components: components.map(
-                (component) => ({
-                    component_id: component.id,
-                    component_sku:
-                        component.component_sku,
-                    component_name:
-                        component.component_name,
+        date: stock.date,
 
-                    batch_no:
-                        component.batchNo,
+        signature: stock.signature,
 
-                    best_before:
-                        component.bestBefore,
+        balanceOnSystem:
+            stock.balanceOnSystem,
 
-                    qty_per_pallet:
-                        component.qtyPerPallet,
+        components: components.map(
+            (component) => ({
+                component_id: component.id,
 
-                    qty_in_room:
-                        component.qtyInRoom,
+                component_sku:
+                    component.component_sku,
 
-                    boxes:
-                        component.boxes,
+                component_name:
+                    component.component_name,
 
-                    singles:
-                        component.singles,
+                batch_no:
+                    component.batchNo,
 
-                    room:
-                        component.room,
+                best_before:
+                    component.bestBefore,
 
-                    warehouse:
-                        component.warehouse,
+                qty_per_pallet:
+                    component.qtyPerPallet,
 
-                    total:
-                        component.total,
-                })
-            ),
-        };
+                qty_in_room:
+                    component.qtyInRoom,
 
-        console.log(
-            "Stocktake ready to save:",
-            stocktakeData
-        );
+                boxes:
+                    component.boxes,
 
-        alert(
-            "Stocktake data is ready to save. The database save endpoint still needs to be added."
-        );
+                singles:
+                    component.singles,
+
+                room:
+                    component.room,
+
+                warehouse:
+                    component.warehouse,
+
+                total:
+                    component.total,
+            })
+        ),
     };
 
+    try {
+
+        const response = await fetch(
+            "/api/job-processing/stocktake/save/",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                },
+
+                body: JSON.stringify(
+                    stocktakeData
+                ),
+            }
+        );
+
+        const result =
+            await response.json();
+
+        if (!response.ok) {
+            alert(result.error);
+            return;
+        }
+
+        alert(result.message);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Save failed");
+    }
+    };
+ 
     /*
     ---------------------------------------------------------
     LOADING

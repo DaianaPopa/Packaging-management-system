@@ -1,93 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function DataAnalytics() {
 
-    // ==================================================
-    // TEMPORARY FRONTEND DATA
-    // Replace with Django data later
-    // ==================================================
+    const [loading, setLoading] = useState(true);
 
-    const [analytics] = useState({
-
-        total_workpacks: 42,
-
-        total_products: 18,
-
-        completed: 27,
-
-        partial: 10,
-
-        not_started: 5,
-
-        products: [
-
-            {
-                sku: "MB896",
-                product: "Chicken Breast 500g",
-                customer: "Example Customer",
-                workpacks: 12,
-                status: "Completed",
-                last_created: "13/08/2026",
-            },
-
-            {
-                sku: "MB421",
-                product: "Chicken Breast 1kg",
-                customer: "Example Customer",
-                workpacks: 9,
-                status: "Completed",
-                last_created: "12/08/2026",
-            },
-
-            {
-                sku: "MB215",
-                product: "Chicken Fillet 250g",
-                customer: "Example Customer",
-                workpacks: 7,
-                status: "Partial",
-                last_created: "11/08/2026",
-            },
-
-            {
-                sku: "MB310",
-                product: "Chicken Thigh 500g",
-                customer: "Example Customer",
-                workpacks: 5,
-                status: "Partial",
-                last_created: "10/08/2026",
-            },
-
-            {
-                sku: "MB550",
-                product: "Chicken Wings 1kg",
-                customer: "Example Customer",
-                workpacks: 4,
-                status: "Not Started",
-                last_created: "-",
-            },
-
-            {
-                sku: "MB180",
-                product: "Chicken Breast 2kg",
-                customer: "Example Customer",
-                workpacks: 3,
-                status: "Completed",
-                last_created: "07/08/2026",
-            },
-
-            {
-                sku: "MB125",
-                product: "Chicken Strips 500g",
-                customer: "Example Customer",
-                workpacks: 2,
-                status: "Partial",
-                last_created: "06/08/2026",
-            },
-
-        ],
-
+    const [analytics, setAnalytics] = useState({
+        total_workpacks: 0,
+        total_products: 0,
+        completed: 0,
+        partial: 0,
+        not_started: 0,
+        products: [],
     });
 
+    // ==================================================
+    // LOAD ANALYTICS
+    // ==================================================
+
+    useEffect(() => {
+        loadAnalytics();
+    }, []);
+
+    async function loadAnalytics() {
+
+        try {
+
+            setLoading(true);
+
+            const response = await fetch(
+                "/api/analytics/"
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Failed to load analytics"
+                );
+            }
+
+            const data =
+                await response.json();
+
+            setAnalytics(data);
+
+        } catch (error) {
+
+            console.error(
+                "Analytics error:",
+                error
+            );
+
+        } finally {
+
+            setLoading(false);
+        }
+    }
 
     // ==================================================
     // STATUS CLASS
@@ -106,6 +72,19 @@ function DataAnalytics() {
         return "status-not-started";
     }
 
+    // ==================================================
+    // LOADING
+    // ==================================================
+
+    if (loading) {
+        return (
+            <div className="analytics-page">
+                <h2>
+                    Loading analytics...
+                </h2>
+            </div>
+        );
+    }
 
     return (
 
@@ -131,7 +110,6 @@ function DataAnalytics() {
 
             </div>
 
-
             {/* ==================================================
                 SUMMARY CARDS
             ================================================== */}
@@ -154,7 +132,6 @@ function DataAnalytics() {
 
                 </div>
 
-
                 <div className="analytics-card">
 
                     <div className="analytics-card-title">
@@ -170,7 +147,6 @@ function DataAnalytics() {
                     </div>
 
                 </div>
-
 
                 <div className="analytics-card">
 
@@ -188,7 +164,6 @@ function DataAnalytics() {
 
                 </div>
 
-
                 <div className="analytics-card">
 
                     <div className="analytics-card-title">
@@ -204,7 +179,6 @@ function DataAnalytics() {
                     </div>
 
                 </div>
-
 
                 <div className="analytics-card">
 
@@ -224,7 +198,6 @@ function DataAnalytics() {
 
             </div>
 
-
             {/* ==================================================
                 MOST GENERATED PRODUCTS
             ================================================== */}
@@ -240,13 +213,13 @@ function DataAnalytics() {
                         </h2>
 
                         <p>
-                            Products with the most workpacks created
+                            Products with the most
+                            workpacks created
                         </p>
 
                     </div>
 
                 </div>
-
 
                 <div className="analytics-table-container">
 
@@ -256,65 +229,51 @@ function DataAnalytics() {
 
                             <tr>
 
-                                <th>
-                                    #
-                                </th>
+                                <th></th>
 
-                                <th>
-                                    SKU
-                                </th>
+                                <th>SKU</th>
 
-                                <th>
-                                    Product
-                                </th>
+                                <th>Product</th>
 
-                                <th>
-                                    Customer
-                                </th>
+                                <th>Customer</th>
 
-                                <th>
-                                    Workpacks
-                                </th>
+                                <th>Workpacks</th>
 
-                                <th>
-                                    Status
-                                </th>
+                                <th>Status</th>
 
-                                <th>
-                                    Last Created
-                                </th>
+                                <th>Last Created</th>
 
                             </tr>
 
                         </thead>
 
-
                         <tbody>
 
                             {analytics.products.map(
-                                (item, index) => (
+                                (
+                                    item,
+                                    index
+                                ) => (
 
-                                    <tr key={item.sku}>
+                                    <tr
+                                        key={`${item.sku}-${index}`}
+                                    >
 
                                         <td>
                                             {index + 1}
                                         </td>
 
-
                                         <td className="sku-cell">
                                             {item.sku}
                                         </td>
-
 
                                         <td>
                                             {item.product}
                                         </td>
 
-
                                         <td>
                                             {item.customer}
                                         </td>
-
 
                                         <td className="number-cell">
 
@@ -323,7 +282,6 @@ function DataAnalytics() {
                                             </strong>
 
                                         </td>
-
 
                                         <td>
 
@@ -336,7 +294,6 @@ function DataAnalytics() {
                                             </span>
 
                                         </td>
-
 
                                         <td>
                                             {item.last_created}
@@ -355,7 +312,6 @@ function DataAnalytics() {
 
             </div>
 
-
             {/* ==================================================
                 PRODUCT ACTIVITY
             ================================================== */}
@@ -371,80 +327,83 @@ function DataAnalytics() {
                         </h2>
 
                         <p>
-                            Number of workpacks generated per product
+                            Number of workpacks generated
+                            per product
                         </p>
 
                     </div>
 
                 </div>
 
-
                 <div className="product-ranking">
 
                     {analytics.products
                         .slice(0, 5)
-                        .map((item, index) => {
+                        .map(
+                            (
+                                item,
+                                index
+                            ) => {
 
-                            const maximum =
-                                analytics.products[0]?.workpacks || 1;
+                                const maximum =
+                                    analytics.products[0]
+                                        ?.workpacks || 1;
 
-                            const percentage =
-                                (item.workpacks / maximum) * 100;
+                                const percentage =
+                                    (
+                                        item.workpacks /
+                                        maximum
+                                    ) * 100;
 
+                                return (
 
-                            return (
+                                    <div
+                                        className="ranking-row"
+                                        key={item.sku}
+                                    >
 
-                                <div
-                                    className="ranking-row"
-                                    key={item.sku}
-                                >
-
-                                    <div className="ranking-position">
-                                        {index + 1}
-                                    </div>
-
-
-                                    <div className="ranking-product">
-
-                                        <div className="ranking-name">
-                                            {item.sku}
+                                        <div className="ranking-position">
+                                            {index + 1}
                                         </div>
 
-                                        <div className="ranking-description">
-                                            {item.product}
+                                        <div className="ranking-product">
+
+                                            <div className="ranking-name">
+                                                {item.sku}
+                                            </div>
+
+                                            <div className="ranking-description">
+                                                {item.product}
+                                            </div>
+
+                                        </div>
+
+                                        <div className="ranking-bar-container">
+
+                                            <div
+                                                className="ranking-bar"
+                                                style={{
+                                                    width: `${percentage}%`,
+                                                }}
+                                            />
+
+                                        </div>
+
+                                        <div className="ranking-number">
+                                            {item.workpacks}
                                         </div>
 
                                     </div>
 
-
-                                    <div className="ranking-bar-container">
-
-                                        <div
-                                            className="ranking-bar"
-                                            style={{
-                                                width: `${percentage}%`,
-                                            }}
-                                        />
-
-                                    </div>
-
-
-                                    <div className="ranking-number">
-                                        {item.workpacks}
-                                    </div>
-
-                                </div>
-
-                            );
-
-                        })}
+                                );
+                            }
+                        )}
 
                 </div>
 
             </div>
 
         </div>
-
     );
 }
 

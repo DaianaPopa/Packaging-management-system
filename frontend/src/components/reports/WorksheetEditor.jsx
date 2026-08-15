@@ -225,8 +225,8 @@ function WorksheetEditor() {
     SAVE
     =========================================================
     */
+    const handleSave = async () => {
 
-    const handleSave = () => {
         const worksheetData = {
             product: productId,
 
@@ -236,27 +236,47 @@ function WorksheetEditor() {
 
             sku: worksheet.sku,
 
+            product_name: worksheet.product,
+
+            transaction: worksheet.transaction,
+
             pallet_configuration:
                 worksheet.pallet_configuration,
-
-            product: worksheet.product,
-
-            transaction:
-                worksheet.transaction,
 
             steps: worksheet.steps,
 
             pallets: pallets,
         };
 
-        console.log(
-            "Worksheet ready to save:",
-            worksheetData
-        );
+        try {
 
-        alert(
-            "Worksheet data is ready to save."
-        );
+            const response = await fetch(
+                "/api/job-processing/worksheet/save/",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                    },
+                    body: JSON.stringify(
+                        worksheetData
+                    ),
+                }
+            );
+
+            const result =
+                await response.json();
+
+            console.log(result);
+
+            alert("Worksheet saved");
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("Save failed");
+        }
     };
 
     /*

@@ -6,8 +6,7 @@ import "../../styles/traceability.css";
 function TraceabilityEditor() {
     const navigate = useNavigate();
     const traceabilityRef = useRef(null);
-    const [searchParams] =
-        useSearchParams();
+    const [searchParams] = useSearchParams();
     // ==================================================
     // PRODUCT
     // ==================================================
@@ -404,6 +403,65 @@ function TraceabilityEditor() {
 
     }
 
+    // save button
+        const handleSave = async () => {
+
+        const traceabilityData = {
+
+            product: productId,
+
+            date: traceability.date,
+
+            customer: traceability.customer,
+
+            product_name: traceability.product,
+
+            sku: traceability.sku,
+
+            processOrder:
+                traceability.processOrder,
+
+            outgoingBatchCode:
+                traceability.outgoingBatchCode,
+
+            rows: rows,
+        };
+
+        try {
+
+            const response = await fetch(
+                "/api/job-processing/traceability/save/",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                    },
+
+                    body: JSON.stringify(
+                        traceabilityData
+                    ),
+                }
+            );
+
+            const result =
+                await response.json();
+
+            if (!response.ok) {
+                alert(result.error);
+                return;
+            }
+
+            alert(result.message);
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("Save failed");
+        }
+    }
 
     // ==================================================
     // PAGE
@@ -843,12 +901,13 @@ function TraceabilityEditor() {
             <div className="worksheet-buttons no-print">
 
 
-                <button
-                    className="save-btn"
-                    type="button"
-                >
-                    Save
-                </button>
+              <button
+                  className="save-btn"
+                  type="button"
+                  onClick={handleSave}
+               >
+                   Save
+               </button>
 
 
                 <button

@@ -1043,33 +1043,6 @@ textarea:disabled {
 }
 
 
-/* =========================
-   THEME
-========================= */
-
-
-.theme-options {
-
-    display: flex;
-
-    gap: 30px;
-
-}
-
-.theme-options label {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    cursor: pointer;
-
-    font-size: 15px;
-
-}
-
 
 /* =========================
    BUTTONS
