@@ -581,12 +581,11 @@ function RejectReportEditor() {
                             Product
                         </label>
 
-                        <div>
+                        <div className="header-value product-name">
                             {report.product}
                         </div>
 
                     </div>
-
 
                     <div className="header-box">
 
