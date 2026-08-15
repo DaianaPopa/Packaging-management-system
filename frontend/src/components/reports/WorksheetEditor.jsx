@@ -8,7 +8,9 @@ function WorksheetEditor() {
     const worksheetRef = useRef(null);
 
     const productId = searchParams.get("product");
-    const reportDate = searchParams.get("date");
+    const reportDate = searchParams.get("date") || new Date()
+        .toISOString()
+        .split("T")[0];
 
     const [loading, setLoading] = useState(true);
     const [worksheet, setWorksheet] = useState(null);

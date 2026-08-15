@@ -3,13 +3,17 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.utils import timezone
-from datetime import datetime
-from django.db.models import Count
+# from datetime import datetime
+# from django.db.models import Count
 
 
 from .models import (
@@ -41,21 +45,113 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     queryset = User.objects.all()
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def save_user_settings(request):
+
+    full_name = request.data.get(
+        "fullName",
+        ""
+    ).strip()
+
+    names = full_name.split(" ", 1)
+
+    request.user.first_name = (
+        names[0]
+        if len(names) > 0
+        else ""
+    )
+
+    request.user.last_name = (
+        names[1]
+        if len(names) > 1
+        else ""
+    )
+
+    request.user.email = request.data.get(
+        "email",
+        ""
+    )
+
+    request.user.save()
+
+    return Response({
+        "message":
+            "Settings saved successfully"
+    })
+    
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def me(request):
+def current_user(request):
 
     profile = UserProfile.objects.get(
         user=request.user
     )
 
     return Response({
-        "id": request.user.id,
         "username": request.user.username,
+        "fullName": (
+            f"{request.user.first_name} "
+            f"{request.user.last_name}"
+        ).strip(),
+        "email": request.user.email,
         "role": profile.role,
     })
-    
 
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+
+    current_password = request.data.get(
+        "currentPassword"
+    )
+
+    new_password = request.data.get(
+        "newPassword"
+    )
+
+    confirm_password = request.data.get(
+        "confirmPassword"
+    )
+
+    if not current_password:
+        return Response(
+            {"error": "Current password is required"},
+            status=400
+        )
+
+    if not new_password:
+        return Response(
+            {"error": "New password is required"},
+            status=400
+        )
+
+    if new_password != confirm_password:
+        return Response(
+            {"error": "Passwords do not match"},
+            status=400
+        )
+
+    if not request.user.check_password(
+        current_password
+    ):
+        return Response(
+            {"error": "Current password is incorrect"},
+            status=400
+        )
+
+    request.user.set_password(
+        new_password
+    )
+
+    request.user.save()
+
+    return Response({
+        "message":
+            "Password changed successfully"
+    })
+    
 # ---------------------------------------------------------
 # WORKPACK DATA
 # ---------------------------------------------------------
@@ -272,7 +368,7 @@ def worksheet_data(request):
 
         "pallet_configuration": product.pallet_configuration,
 
-        "date": report_date,
+        "date": report_date or timezone.now().date(),
 
         "steps": [
             {
@@ -1189,3 +1285,54 @@ def save_traceability(request):
 class PackagingSpecificationViewSet(viewsets.ModelViewSet):
     queryset = PackagingSpecification.objects.all()
     serializer_class = PackagingSpecificationSerializer
+
+# ai reports
+@api_view(["GET"])
+def packaging_forecast(request):
+
+    forecasts = []
+
+    for product in Product.objects.all():
+
+        workpacks = (
+            Workpack.objects
+            .filter(product=product)
+            .order_by("date")
+        )
+
+        runs = []
+
+        for workpack in workpacks:
+
+            worksheet = (
+                workpack.worksheet_data or {}
+            )
+
+            pallets = (
+                worksheet.get("pallets", [])
+            )
+
+            total_outers = sum(
+                int(p.get("outers") or 0)
+                for p in pallets
+            )
+
+            if total_outers > 0:
+                runs.append(total_outers)
+
+        if runs:
+
+            average = round(
+                sum(runs) / len(runs)
+            )
+
+            forecasts.append({
+                "sku": product.sku,
+                "product": product.name,
+                "history": runs,
+                "forecast": average,
+            })
+
+    return Response({
+        "forecasts": forecasts
+    })

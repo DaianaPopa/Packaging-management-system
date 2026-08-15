@@ -87,9 +87,13 @@ function App() {
                   element={<JobProcessing />}
                 />
 
-                 <Route
+                <Route
                   path="/dataAnalytics"
-                  element={<DataAnalytics />}
+                  element={
+                    <AdminRoute>
+                      <DataAnalytics />
+                    </AdminRoute>
+                  }
                 />
 
                 <Route

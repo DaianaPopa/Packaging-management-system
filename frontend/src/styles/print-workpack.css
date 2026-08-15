@@ -1,0 +1,149 @@
+/* =========================================================
+   PRINT WORKPACK
+   EVERYTHING IS PHYSICALLY A4 LANDSCAPE
+========================================================= */
+
+.print-workpack {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* =========================================================
+   EVERY REPORT = ONE LANDSCAPE A4 PAGE
+========================================================= */
+
+.print-page {
+    width: 297mm;
+    height: 210mm;
+
+    position: relative;
+
+    box-sizing: border-box;
+
+    background: white;
+
+    overflow: hidden;
+
+    page-break-after: always;
+    break-after: page;
+}
+
+
+/* =========================================================
+   LANDSCAPE REPORT
+========================================================= */
+
+.landscape-report {
+    width: 297mm;
+    height: 210mm;
+
+    box-sizing: border-box;
+
+    padding: 8mm;
+}
+
+
+/* =========================================================
+   PORTRAIT REPORT ROTATED 90°
+   
+   Original report:
+       210mm x 297mm
+
+   Physical print page:
+       297mm x 210mm
+
+   We rotate the portrait report inside
+   the landscape sheet.
+========================================================= */
+
+.rotated-portrait {
+    position: absolute;
+
+    width: 210mm;
+    height: 297mm;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%)
+        rotate(90deg);
+
+    transform-origin: center center;
+
+    box-sizing: border-box;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   PORTRAIT REPORT CONTENT
+========================================================= */
+
+.rotated-portrait .worksheet,
+.rotated-portrait .portrait-report {
+
+    width: 210mm;
+    min-height: 297mm;
+
+    box-sizing: border-box;
+
+    padding: 8mm;
+
+    background: white;
+
+    color: black;
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   PRINT ONLY
+========================================================= */
+
+@media print {
+
+    @page {
+        size: A4 landscape;
+        margin: 0;
+    }
+
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+
+        width: 100%;
+        height: 100%;
+    }
+
+    body {
+        background: white;
+    }
+
+    .print-workpack {
+        width: 297mm;
+    }
+
+    .print-page {
+        width: 297mm;
+        height: 210mm;
+
+        margin: 0;
+        padding: 0;
+
+        page-break-after: always;
+        break-after: page;
+
+        overflow: hidden;
+    }
+
+    .print-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+    }
+}

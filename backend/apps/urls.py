@@ -1,12 +1,12 @@
 from rest_framework.routers import DefaultRouter
 from .views import CustomerViewSet, PackagingSpecificationViewSet, ProductViewSet, UploadedFileViewSet
 from django.urls import path
-from .views import worksheet_data, save_worksheet, reject_report_data, save_reject_report, checksheet_data, save_checksheet, stocktake_data, save_stocktake, traceability_data, save_traceability, analytics_data, RegisterView, me, workpack_data 
+from .views import (worksheet_data, save_worksheet, reject_report_data, save_reject_report, checksheet_data,
+                    save_checksheet, stocktake_data, save_stocktake, traceability_data, save_traceability, 
+                    analytics_data,RegisterView, workpack_data, packaging_forecast, save_user_settings, current_user,
+                    change_password)
 
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView,)
 
 router = DefaultRouter()
 router.register("customers", CustomerViewSet, basename="customer")
@@ -15,6 +15,16 @@ router.register("uploadedfiles", UploadedFileViewSet, basename="uploadedfile")
 router.register("packaging_specifications", PackagingSpecificationViewSet, basename="packaging_specification")
 
 urlpatterns = router.urls + [
+    path(
+        "settings/save/",
+        save_user_settings,
+        name="save-user-settings"
+    ),
+    path(
+        "analytics/forecast/",
+        packaging_forecast,
+        name="packaging_forecast",
+    ),
     path(
         "job-processing/workpack/",
         workpack_data,
@@ -77,21 +87,29 @@ urlpatterns = router.urls + [
     ),
     path(
         "register/",
-        RegisterView.as_view()
-        ),
+        RegisterView.as_view(),
+        name="register"
+    ),
 
     path(
         "login/",
-        TokenObtainPairView.as_view()
+        TokenObtainPairView.as_view(),
+        name="login"
     ),
 
     path(
         "refresh/",
-        TokenRefreshView.as_view()
+        TokenRefreshView.as_view(),
+        name="refresh"
     ),
-
     path(
         "me/",
-        me
+        current_user,
+        name="current-user"
+    ),
+    path(
+        "settings/change-password/",
+        change_password,
+        name="change-password"
     ),
 ]

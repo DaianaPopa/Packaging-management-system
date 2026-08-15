@@ -16,11 +16,19 @@ function Header() {
     localStorage.removeItem("role");
     localStorage.removeItem("username");
 
+    setOpenMenu(false);
+
     navigate("/login");
+  };
+
+  const handleSettings = () => {
+    setOpenMenu(false);
+    navigate("/settings");
   };
 
   return (
     <header className="header">
+
       <div className="logo-section">
         <h1>
           <span className="logo-red">DEKA</span>
@@ -33,12 +41,12 @@ function Header() {
       </div>
 
       <div className="header-right">
+
         <div className="profile-wrapper">
+
           <button
             className="profile-btn"
-            onClick={() =>
-              setOpenMenu(!openMenu)
-            }
+            onClick={() => setOpenMenu(!openMenu)}
           >
             <div className="avatar">
               {localStorage.getItem("username") || "Account"}
@@ -48,13 +56,13 @@ function Header() {
           {openMenu && (
             <div className="profile-dropdown">
 
-              <NavLink
-                to="/settings"
+              <button
                 className="dropdown-item"
+                onClick={handleSettings}
               >
                 <Settings size={18} />
                 <span>Settings</span>
-              </NavLink>
+              </button>
 
               <button
                 className="dropdown-item logout"
@@ -66,8 +74,11 @@ function Header() {
 
             </div>
           )}
+
         </div>
+
       </div>
+
     </header>
   );
 }

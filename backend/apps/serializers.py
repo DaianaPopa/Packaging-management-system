@@ -18,26 +18,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    role = serializers.CharField(
-        write_only=True,
-        required=False
-    )
-
     class Meta:
         model = User
         fields = [
             "username",
             "email",
             "password",
-            "role",
         ]
 
     def create(self, validated_data):
-
-        role = validated_data.pop(
-            "role",
-            "user"
-        )
 
         user = User.objects.create_user(
             **validated_data
@@ -45,11 +34,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         UserProfile.objects.create(
             user=user,
-            role=role
+            role="user"
         )
 
         return user
-
 # ---------------------------------------------------------
 # CUSTOMER
 # ---------------------------------------------------------

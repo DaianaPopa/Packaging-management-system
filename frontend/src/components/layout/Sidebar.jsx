@@ -25,7 +25,22 @@ function Sidebar() {
         <span>Job Processing</span>
       </NavLink>
 
-      <NavLink to="/dataAnalytics" className="sidebar-link">
+      {role === "admin" && (
+        <>
+          <NavLink to="/dataAnalytics" className="sidebar-link">
+            <Database size={22} />
+            <span>Data Analytics</span>
+          </NavLink>
+
+          <NavLink to="/reports" className="sidebar-link">
+            <AlertTriangle size={22} />
+            <span>AI Reports</span>
+          </NavLink>
+        </>
+      )}
+
+
+      {/* <NavLink to="/dataAnalytics" className="sidebar-link">
         <Database size={22} />
         <span>Data Analytics</span>
       </NavLink>
@@ -38,7 +53,7 @@ function Sidebar() {
           <AlertTriangle size={22} />
           <span>AI Reports</span>
         </NavLink>
-      )}
+      )} */}
 
     </aside>
   );
