@@ -3,8 +3,8 @@ from .views import CustomerViewSet, PackagingSpecificationViewSet, ProductViewSe
 from django.urls import path
 from .views import (worksheet_data, save_worksheet, reject_report_data, save_reject_report, checksheet_data,
                     save_checksheet, stocktake_data, save_stocktake, traceability_data, save_traceability, 
-                    analytics_data,RegisterView, workpack_data, packaging_forecast, save_user_settings, current_user,
-                    change_password)
+                    analytics_data,RegisterView, workpack_data, save_user_settings, current_user,
+                    change_password, report)
 
 from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView,)
 
@@ -19,11 +19,6 @@ urlpatterns = router.urls + [
         "settings/save/",
         save_user_settings,
         name="save-user-settings"
-    ),
-    path(
-        "analytics/forecast/",
-        packaging_forecast,
-        name="packaging_forecast",
     ),
     path(
         "job-processing/workpack/",
@@ -111,5 +106,10 @@ urlpatterns = router.urls + [
         "settings/change-password/",
         change_password,
         name="change-password"
+    ),
+    path(
+        "report/",
+        report,
+        name="report"
     ),
 ]

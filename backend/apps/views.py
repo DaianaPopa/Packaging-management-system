@@ -15,6 +15,19 @@ from django.utils import timezone
 # from datetime import datetime
 # from django.db.models import Count
 
+import os
+import pandas as pd
+import joblib
+import numpy as np
+
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score
+)
+
 
 from .models import (
     Customer,
@@ -1286,53 +1299,643 @@ class PackagingSpecificationViewSet(viewsets.ModelViewSet):
     queryset = PackagingSpecification.objects.all()
     serializer_class = PackagingSpecificationSerializer
 
-# ai reports
+# ---------------------------------------------------------
+# MACHINE LEARNING REPORT
+# ---------------------------------------------------------
+
 @api_view(["GET"])
-def packaging_forecast(request):
+def report(request):
 
-    forecasts = []
+    try:
 
-    for product in Product.objects.all():
+        # =====================================================
+        # FILE PATHS
+        # =====================================================
 
-        workpacks = (
-            Workpack.objects
-            .filter(product=product)
-            .order_by("date")
+        BASE_DIR = os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__)
+            )
         )
 
-        runs = []
+        DATA_PATH = os.path.join(
+            BASE_DIR,
+            "ml",
+            "data",
+            "regression_training_dataset.csv"
+        )
 
-        for workpack in workpacks:
+        BOM_PATH = os.path.join(
+            BASE_DIR,
+            "ml",
+            "data",
+            "product_component_bom.csv"
+        )
 
-            worksheet = (
-                workpack.worksheet_data or {}
+
+        # =====================================================
+        # CHECK DATASET
+        # =====================================================
+
+        if not os.path.exists(DATA_PATH):
+
+            return Response({
+                "error": "Regression training dataset not found.",
+                "path": DATA_PATH
+            }, status=404)
+
+
+        # =====================================================
+        # LOAD DATASET
+        # =====================================================
+
+        df = pd.read_csv(DATA_PATH)
+
+        df["month_start"] = pd.to_datetime(
+            df["month_start"]
+        )
+
+
+        # =====================================================
+        # SORT DATA CHRONOLOGICALLY
+        # =====================================================
+
+        df = (
+            df
+            .sort_values(
+                ["month_start", "sku"]
             )
+            .reset_index(drop=True)
+        )
 
-            pallets = (
-                worksheet.get("pallets", [])
-            )
 
-            total_outers = sum(
-                int(p.get("outers") or 0)
-                for p in pallets
-            )
+        # =====================================================
+        # FEATURES
+        # =====================================================
 
-            if total_outers > 0:
-                runs.append(total_outers)
+        features = [
+            "previous_month_quantity",
+            "previous_month_orders",
+            "previous_month_customers",
+            "rolling_3_month_avg_quantity",
+            "month",
+            "quarter",
+        ]
 
-        if runs:
+        target = "target_next_month_quantity"
 
-            average = round(
-                sum(runs) / len(runs)
-            )
 
-            forecasts.append({
-                "sku": product.sku,
-                "product": product.name,
-                "history": runs,
-                "forecast": average,
+        # =====================================================
+        # REMOVE MISSING VALUES
+        # =====================================================
+
+        df = df.dropna(
+            subset=features + [target]
+        ).copy()
+
+
+        # =====================================================
+        # CHECK DATA
+        # =====================================================
+
+        if len(df) < 5:
+
+            return Response({
+
+                "error":
+                    "Not enough historical data for machine learning.",
+
+                "training_observations": 0,
+
+                "testing_observations": 0,
+
+                "linear_regression": {
+                    "mae": 0,
+                    "rmse": 0,
+                    "r2": 0,
+                },
+
+                "random_forest": {
+                    "mae": 0,
+                    "rmse": 0,
+                    "r2": 0,
+                },
+
+                "best_model":
+                    "Not available",
+
+                "predictions": [],
+
+                "components": [],
+
             })
 
-    return Response({
-        "forecasts": forecasts
-    })
+
+        # =====================================================
+        # TIME-BASED TRAIN / TEST SPLIT
+        # =====================================================
+
+        split_index = int(
+            len(df) * 0.80
+        )
+
+        train_df = df.iloc[
+            :split_index
+        ].copy()
+
+        test_df = df.iloc[
+            split_index:
+        ].copy()
+
+
+        X_train = train_df[
+            features
+        ]
+
+        y_train = train_df[
+            target
+        ]
+
+        X_test = test_df[
+            features
+        ]
+
+        y_test = test_df[
+            target
+        ]
+
+
+        # =====================================================
+        # LINEAR REGRESSION
+        # =====================================================
+
+        linear_model = LinearRegression()
+
+        linear_model.fit(
+            X_train,
+            y_train
+        )
+
+        linear_predictions = (
+            linear_model.predict(
+                X_test
+            )
+        )
+
+
+        linear_mae = mean_absolute_error(
+            y_test,
+            linear_predictions
+        )
+
+        linear_rmse = np.sqrt(
+            mean_squared_error(
+                y_test,
+                linear_predictions
+            )
+        )
+
+        linear_r2 = r2_score(
+            y_test,
+            linear_predictions
+        )
+
+
+        # =====================================================
+        # RANDOM FOREST
+        # =====================================================
+
+        random_forest_model = RandomForestRegressor(
+            n_estimators=200,
+            max_depth=5,
+            min_samples_leaf=2,
+            random_state=42
+        )
+
+        random_forest_model.fit(
+            X_train,
+            y_train
+        )
+
+        random_forest_predictions = (
+            random_forest_model.predict(
+                X_test
+            )
+        )
+
+
+        random_forest_mae = mean_absolute_error(
+            y_test,
+            random_forest_predictions
+        )
+
+        random_forest_rmse = np.sqrt(
+            mean_squared_error(
+                y_test,
+                random_forest_predictions
+            )
+        )
+
+        random_forest_r2 = r2_score(
+            y_test,
+            random_forest_predictions
+        )
+
+
+        # =====================================================
+        # SELECT BEST MODEL
+        # =====================================================
+
+        if random_forest_mae < linear_mae:
+
+            best_model = random_forest_model
+
+            best_model_name = (
+                "Random Forest Regression"
+            )
+
+            best_mae = random_forest_mae
+
+            best_rmse = random_forest_rmse
+
+            best_r2 = random_forest_r2
+
+        else:
+
+            best_model = linear_model
+
+            best_model_name = (
+                "Linear Regression"
+            )
+
+            best_mae = linear_mae
+
+            best_rmse = linear_rmse
+
+            best_r2 = linear_r2
+
+
+        # =====================================================
+        # TRAIN BEST MODEL USING ALL AVAILABLE DATA
+        # =====================================================
+
+        X_all = df[
+            features
+        ]
+
+        y_all = df[
+            target
+        ]
+
+        best_model.fit(
+            X_all,
+            y_all
+        )
+
+
+        # =====================================================
+        # GET LATEST RECORD FOR EACH SKU
+        # =====================================================
+
+        latest_data = (
+            df
+            .sort_values("month_start")
+            .groupby("sku")
+            .tail(1)
+            .copy()
+        )
+
+
+        latest_data = latest_data.dropna(
+            subset=features
+        )
+
+
+        # =====================================================
+        # NEXT MONTH PREDICTIONS
+        # =====================================================
+
+        X_forecast = latest_data[
+            features
+        ]
+
+        predictions = (
+            best_model.predict(
+                X_forecast
+            )
+        )
+
+
+        latest_data[
+            "predicted_demand"
+        ] = predictions
+
+
+        latest_data[
+            "predicted_demand"
+        ] = (
+            latest_data[
+                "predicted_demand"
+            ]
+            .clip(lower=0)
+            .round()
+            .astype(int)
+        )
+
+
+        # =====================================================
+        # BUILD PRODUCT FORECAST
+        # =====================================================
+
+        product_forecasts = []
+
+        for _, row in latest_data.iterrows():
+
+            product_forecasts.append({
+
+                "sku":
+                    str(row["sku"]),
+
+                "product":
+                    str(row.get(
+                        "product",
+                        ""
+                    )),
+
+                "last_recorded_month":
+                    row[
+                        "month_start"
+                    ].strftime(
+                        "%Y-%m-%d"
+                    ),
+
+                "predicted_demand":
+                    int(
+                        row[
+                            "predicted_demand"
+                        ]
+                    ),
+
+            })
+
+
+        # =====================================================
+        # COMPONENT FORECAST
+        # =====================================================
+
+        component_forecasts = []
+
+
+        if os.path.exists(BOM_PATH):
+
+            bom = pd.read_csv(
+                BOM_PATH
+            )
+
+
+            component_forecast = bom.merge(
+
+                latest_data[
+                    [
+                        "sku",
+                        "predicted_demand"
+                    ]
+                ],
+
+                on="sku",
+
+                how="inner"
+            )
+
+
+            component_forecast[
+                "forecasted_component_quantity"
+            ] = (
+
+                component_forecast[
+                    "predicted_demand"
+                ]
+
+                *
+
+                component_forecast[
+                    "component_units_per_product"
+                ]
+
+            )
+
+
+            total_components = (
+
+                component_forecast
+
+                .groupby(
+                    "component",
+                    as_index=False
+                )[
+
+                    "forecasted_component_quantity"
+
+                ]
+
+                .sum()
+
+            )
+
+
+            total_components[
+                "forecasted_component_quantity"
+            ] = (
+
+                total_components[
+                    "forecasted_component_quantity"
+                ]
+
+                .clip(lower=0)
+
+                .round()
+
+                .astype(int)
+
+            )
+
+
+        for _, row in total_components.iterrows():
+
+            component_forecasts.append({
+
+                "component": str(row["component"]),
+
+                "forecasted_quantity": int(
+                    row["forecasted_component_quantity"]
+                ),
+
+            })
+
+        # =====================================================
+        # RETURN ML REPORT
+        # =====================================================
+
+        return Response({
+
+            "training_observations":
+                len(train_df),
+
+            "testing_observations":
+                len(test_df),
+
+
+            "training_period": {
+
+                "start":
+                    train_df[
+                        "month_start"
+                    ].min().strftime(
+                        "%Y-%m-%d"
+                    ),
+
+                "end":
+                    train_df[
+                        "month_start"
+                    ].max().strftime(
+                        "%Y-%m-%d"
+                    )
+
+            },
+
+
+            "testing_period": {
+
+                "start":
+                    test_df[
+                        "month_start"
+                    ].min().strftime(
+                        "%Y-%m-%d"
+                    ),
+
+                "end":
+                    test_df[
+                        "month_start"
+                    ].max().strftime(
+                        "%Y-%m-%d"
+                    )
+
+            },
+
+
+            "linear_regression": {
+
+                "mae":
+                    round(
+                        float(
+                            linear_mae
+                        ),
+                        2
+                    ),
+
+                "rmse":
+                    round(
+                        float(
+                            linear_rmse
+                        ),
+                        2
+                    ),
+
+                "r2":
+                    round(
+                        float(
+                            linear_r2
+                        ),
+                        3
+                    ),
+
+            },
+
+
+            "random_forest": {
+
+                "mae":
+                    round(
+                        float(
+                            random_forest_mae
+                        ),
+                        2
+                    ),
+
+                "rmse":
+                    round(
+                        float(
+                            random_forest_rmse
+                        ),
+                        2
+                    ),
+
+                "r2":
+                    round(
+                        float(
+                            random_forest_r2
+                        ),
+                        3
+                    ),
+
+            },
+
+
+            "best_model":
+                best_model_name,
+
+
+            "best_mae":
+                round(
+                    float(
+                        best_mae
+                    ),
+                    2
+                ),
+
+
+            "best_rmse":
+                round(
+                    float(
+                        best_rmse
+                    ),
+                    2
+                ),
+
+
+            "best_r2":
+                round(
+                    float(
+                        best_r2
+                    ),
+                    3
+                ),
+
+
+            "total_skus_forecasted":
+                len(
+                    product_forecasts
+                ),
+
+
+            "predictions":
+                product_forecasts,
+
+
+            "components":
+                component_forecasts,
+
+        })
+
+
+    except Exception as e:
+
+        return Response({
+
+            "error":
+                "Machine learning report failed.",
+
+            "details":
+                str(e)
+
+        }, status=500)
