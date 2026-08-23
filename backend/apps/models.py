@@ -35,6 +35,31 @@ class Customer(models.Model):
     def __str__(self):
         return self.company_name
 
+class UserActivity(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="activities"
+    )
+
+    action = models.CharField(
+        max_length=100
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action}"
 
 class Product(models.Model):
    

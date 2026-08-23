@@ -37,7 +37,8 @@ from .models import (
     Component,
     PackingProcessStep,
     UserProfile,
-    Workpack
+    Workpack,
+    UserActivity,
 )
 
 from .serializers import (
@@ -50,13 +51,43 @@ from .serializers import (
 
 import openpyxl
 import json
-from rest_framework.decorators import api_view
 
+# =====================================================
+# REGISTER
+# =====================================================
 
-# register/login
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     queryset = User.objects.all()
+
+
+# =====================================================
+# CURRENT USER
+# =====================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def current_user(request):
+
+    profile, created = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={"role": "user"}
+    )
+
+    return Response({
+        "username": request.user.username,
+        "fullName": (
+            f"{request.user.first_name} "
+            f"{request.user.last_name}"
+        ).strip(),
+        "email": request.user.email,
+        "role": profile.role,
+    })
+
+
+# =====================================================
+# SAVE SETTINGS
+# =====================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -70,15 +101,11 @@ def save_user_settings(request):
     names = full_name.split(" ", 1)
 
     request.user.first_name = (
-        names[0]
-        if len(names) > 0
-        else ""
+        names[0] if len(names) > 0 else ""
     )
 
     request.user.last_name = (
-        names[1]
-        if len(names) > 1
-        else ""
+        names[1] if len(names) > 1 else ""
     )
 
     request.user.email = request.data.get(
@@ -89,28 +116,13 @@ def save_user_settings(request):
     request.user.save()
 
     return Response({
-        "message":
-            "Settings saved successfully"
-    })
-    
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def current_user(request):
-
-    profile = UserProfile.objects.get(
-        user=request.user
-    )
-
-    return Response({
-        "username": request.user.username,
-        "fullName": (
-            f"{request.user.first_name} "
-            f"{request.user.last_name}"
-        ).strip(),
-        "email": request.user.email,
-        "role": profile.role,
+        "message": "Settings saved successfully"
     })
 
+
+# =====================================================
+# CHANGE PASSWORD
+# =====================================================
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -134,9 +146,11 @@ def change_password(request):
             status=400
         )
 
-    if not new_password:
+    if not request.user.check_password(
+        current_password
+    ):
         return Response(
-            {"error": "New password is required"},
+            {"error": "Current password is incorrect"},
             status=400
         )
 
@@ -146,25 +160,155 @@ def change_password(request):
             status=400
         )
 
-    if not request.user.check_password(
-        current_password
-    ):
+    request.user.set_password(new_password)
+    request.user.save()
+
+    update_session_auth_hash(
+        request,
+        request.user
+    )
+
+    return Response({
+        "message": "Password changed successfully"
+    })
+
+
+# =====================================================
+# ADMIN - GET USERS
+# =====================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def admin_users(request):
+
+    try:
+        profile = UserProfile.objects.get(
+            user=request.user
+        )
+    except UserProfile.DoesNotExist:
         return Response(
-            {"error": "Current password is incorrect"},
+            {"error": "Profile not found"},
+            status=403
+        )
+
+    if profile.role != "admin":
+        return Response(
+            {"error": "Admin access required"},
+            status=403
+        )
+
+    users = User.objects.all().order_by(
+        "username"
+    )
+
+    data = []
+
+    for user in users:
+
+        user_profile, created = (
+            UserProfile.objects.get_or_create(
+                user=user,
+                defaults={"role": "user"}
+            )
+        )
+
+        last_activity = (
+            UserActivity.objects
+            .filter(user=user)
+            .order_by("-created_at")
+            .first()
+        )
+
+        data.append({
+            "id": user.id,
+            "username": user.username,
+            "fullName": (
+                f"{user.first_name} "
+                f"{user.last_name}"
+            ).strip(),
+            "email": user.email,
+            "role": user_profile.role,
+            "is_active": user.is_active,
+            "last_activity": (
+                last_activity.created_at
+                if last_activity
+                else None
+            ),
+        })
+
+    return Response(data)
+
+
+# =====================================================
+# ADMIN - CHANGE ROLE
+# =====================================================
+
+@api_view(["PATCH", "POST"])
+@permission_classes([IsAuthenticated])
+def change_user_role(request, user_id):
+
+    try:
+        profile = UserProfile.objects.get(
+            user=request.user
+        )
+    except UserProfile.DoesNotExist:
+        return Response(
+            {"error": "Profile not found"},
+            status=403
+        )
+
+    if profile.role != "admin":
+        return Response(
+            {"error": "Admin access required"},
+            status=403
+        )
+
+    try:
+        user = User.objects.get(
+            id=user_id
+        )
+    except User.DoesNotExist:
+        return Response(
+            {"error": "User not found"},
+            status=404
+        )
+
+    new_role = request.data.get("role")
+
+    if new_role not in [
+        "admin",
+        "user"
+    ]:
+        return Response(
+            {
+                "error":
+                "Role must be admin or user"
+            },
             status=400
         )
 
-    request.user.set_password(
-        new_password
+    user_profile, created = (
+        UserProfile.objects.get_or_create(
+            user=user,
+            defaults={
+                "role": new_role
+            }
+        )
     )
 
-    request.user.save()
+    if not created:
+        user_profile.role = new_role
+        user_profile.save()
 
     return Response({
         "message":
-            "Password changed successfully"
+        "User role updated successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "role": user_profile.role,
+        }
     })
-    
 # ---------------------------------------------------------
 # WORKPACK DATA
 # ---------------------------------------------------------
