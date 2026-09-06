@@ -63,8 +63,6 @@ print("Usable observations:", len(df))
 # 5. TIME-BASED TRAIN / TEST SPLIT
 # ==========================================================
 
-# Use the earlier 80% of the observations for training
-# and the latest 20% for testing.
 
 split_index = int(
     len(df) * 0.80
