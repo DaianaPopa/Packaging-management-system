@@ -135,8 +135,7 @@ function JobProcessing() {
         </h2>
 
         <p>
-          Search for a product and select
-          the report you want to generate.
+          Select a product and generate a workpack.
         </p>
 
       </div>

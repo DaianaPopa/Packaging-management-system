@@ -1,4 +1,4 @@
-import { Package, FileText, Building2, AlertTriangle, Database } from "lucide-react";
+import { Package, FileText, Building2, Database } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 function Sidebar() {
@@ -31,29 +31,8 @@ function Sidebar() {
             <Database size={22} />
             <span>Data Analytics</span>
           </NavLink>
-
-          <NavLink to="/reports" className="sidebar-link">
-            <AlertTriangle size={22} />
-            <span>AI Reports</span>
-          </NavLink>
         </>
       )}
-
-
-      {/* <NavLink to="/dataAnalytics" className="sidebar-link">
-        <Database size={22} />
-        <span>Data Analytics</span>
-      </NavLink>
-      
-      {role === "admin" && (
-        <NavLink
-          to="/reports"
-          className="sidebar-link"
-        >
-          <AlertTriangle size={22} />
-          <span>AI Reports</span>
-        </NavLink>
-      )} */}
 
     </aside>
   );

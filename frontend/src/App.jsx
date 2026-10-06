@@ -15,7 +15,7 @@ import StocktakeEditor from "./components/reports/StocktakeEditor";
 // Pages
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
-import Reports from "./pages/Reports";
+import ProductBulkUpload from "./pages/ProductBulkUpload";
 import JobProcessing from "./pages/JobProcessing";
 import Customers from "./pages/Customers";
 import CustomerDetail from "./pages/CustomerDetail";
@@ -59,6 +59,11 @@ function App() {
                 />
 
                 <Route
+                  path="/products/bulk-upload"
+                  element={<ProductBulkUpload />}
+                />
+
+                <Route
                   path="/products/:id"
                   element={<ProductDetail />}
                 />
@@ -71,15 +76,6 @@ function App() {
                 <Route
                   path="/customers/:id"
                   element={<CustomerDetail />}
-                />
-
-                <Route
-                  path="/reports"
-                  element={
-                    <AdminRoute>
-                      <Reports />
-                    </AdminRoute>
-                  }
                 />
 
                 <Route

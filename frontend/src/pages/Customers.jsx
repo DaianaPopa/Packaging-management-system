@@ -5,6 +5,8 @@ import {
   Eye,
   Pencil,
   Building2,
+  Plus,
+  Trash,
 } from "lucide-react";
 
 import SearchBar from "../components/common/SearchBar";
@@ -12,6 +14,7 @@ import SearchBar from "../components/common/SearchBar";
 function Customers() {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
 
   const [activeFilters, setActiveFilters] = useState({
     customer: "",
@@ -37,6 +40,52 @@ function Customers() {
         error
       );
     }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedCustomerIds.length === 0) return;
+
+    if (!window.confirm(`Delete ${selectedCustomerIds.length} selected customers?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "https://daianapopa.pythonanywhere.com/api/customers/bulk-delete/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: selectedCustomerIds }),
+        }
+      );
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to delete customers");
+      }
+
+      alert(result.message || "Customers deleted successfully");
+      setSelectedCustomerIds([]);
+      fetchCustomers();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete selected customers");
+    }
+  };
+
+  const toggleCustomerSelection = (customerId) => {
+    setSelectedCustomerIds((current) =>
+      current.includes(customerId)
+        ? current.filter((id) => id !== customerId)
+        : [...current, customerId]
+    );
+  };
+
+  const toggleAllCustomers = () => {
+    const visibleIds = filteredCustomers.map((customer) => customer.id);
+    const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedCustomerIds.includes(id));
+
+    setSelectedCustomerIds(allSelected ? selectedCustomerIds.filter((id) => !visibleIds.includes(id)) : Array.from(new Set([...selectedCustomerIds, ...visibleIds])));
   };
 
   const filteredCustomers = customers.filter(
@@ -95,10 +144,21 @@ function Customers() {
           onFilter={setActiveFilters}
         />
 
+        <button
+          className="bulk-delete-btn"
+          onClick={handleBulkDelete}
+          disabled={selectedCustomerIds.length === 0}
+        >
+          <Trash size={18} />
+          Delete Selected
+          {selectedCustomerIds.length > 0 && ` (${selectedCustomerIds.length})`}
+        </button>
+
         <Link
           to="/customers/new"
-          className="new-product-btn"
+          className="primary-action-btn add-customer-btn"
         >
+          <Plus size={18} />
           Add Customer
         </Link>
       </div>
@@ -107,6 +167,15 @@ function Customers() {
         <table>
           <thead>
             <tr>
+              <th className="selection-column">
+                <input
+                  className="selection-checkbox"
+                  type="checkbox"
+                  aria-label="Select all customers"
+                  checked={filteredCustomers.length > 0 && filteredCustomers.every((customer) => selectedCustomerIds.includes(customer.id))}
+                  onChange={toggleAllCustomers}
+                />
+              </th>
               <th>CUSTOMER NAME</th>
               <th>EMAIL</th>
               <th>PHONE</th>
@@ -119,7 +188,7 @@ function Customers() {
             {filteredCustomers.length === 0 ? (
               <tr>
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="empty-state"
                 >
                   <div className="empty-icon">
@@ -138,6 +207,16 @@ function Customers() {
               filteredCustomers.map(
                 (customer) => (
                   <tr key={customer.id}>
+                    <td>
+                      <input
+                        className="selection-checkbox"
+                        type="checkbox"
+                        aria-label={`Select customer ${customer.company_name}`}
+                        checked={selectedCustomerIds.includes(customer.id)}
+                        onChange={() => toggleCustomerSelection(customer.id)}
+                      />
+                    </td>
+
                     <td>
                       {customer.company_name}
                     </td>

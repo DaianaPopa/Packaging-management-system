@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Eye, Pencil, Package, Upload } from "lucide-react";
+import { Search, Eye, Pencil, Package, Upload, Trash } from "lucide-react";
 import SearchBar from "../components/common/SearchBar";
 
 function Products() {
   const [products, setProducts] = useState([]);
-  const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
-  const [showBulkModal, setShowBulkModal] = useState(false);
-  const [bulkCustomer, setBulkCustomer] = useState("");
-  const [bulkFiles, setBulkFiles] = useState([]);
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [showCreationOptions, setShowCreationOptions] = useState(false);
 
   const [activeFilters, setActiveFilters] = useState({
     customer: "",
@@ -21,11 +18,6 @@ function Products() {
 
   useEffect(() => {
     fetchProducts();
-
-    fetch("https://daianapopa.pythonanywhere.com/api/customers/")
-      .then((res) => res.json())
-      .then((data) => setCustomers(data))
-      .catch((err) => console.error(err));
   }, []);
 
   const fetchProducts = async () => {
@@ -41,47 +33,50 @@ function Products() {
     }
   };
 
-  const handleBulkUpload = async () => {
-    if (!bulkCustomer) {
-      alert("Please select a customer");
+  const handleBulkDelete = async () => {
+    if (selectedProductIds.length === 0) return;
+
+    if (!window.confirm(`Delete ${selectedProductIds.length} selected products?`)) {
       return;
     }
-
-    if (bulkFiles.length === 0) {
-      alert("Please select files");
-      return;
-    }
-
-    const formData = new FormData();
-
-    formData.append("customer", bulkCustomer);
-
-    bulkFiles.forEach((file) => {
-      formData.append("files", file);
-    });
 
     try {
       const response = await fetch(
-        "https://daianapopa.pythonanywhere.com/api/products/bulk-upload/",
+        "https://daianapopa.pythonanywhere.com/api/products/bulk-delete/",
         {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: selectedProductIds }),
         }
       );
-
       const result = await response.json();
 
-      alert(result.message || "Upload complete");
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to delete products");
+      }
 
-      setShowBulkModal(false);
-      setBulkFiles([]);
-      setBulkCustomer("");
-
+      alert(result.message || "Products deleted successfully");
+      setSelectedProductIds([]);
       fetchProducts();
     } catch (error) {
       console.error(error);
-      alert("Upload failed");
+      alert("Failed to delete selected products");
     }
+  };
+
+  const toggleProductSelection = (productId) => {
+    setSelectedProductIds((current) =>
+      current.includes(productId)
+        ? current.filter((id) => id !== productId)
+        : [...current, productId]
+    );
+  };
+
+  const toggleAllProducts = () => {
+    const visibleIds = filteredProducts.map((product) => product.id);
+    const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedProductIds.includes(id));
+
+    setSelectedProductIds(allSelected ? selectedProductIds.filter((id) => !visibleIds.includes(id)) : Array.from(new Set([...selectedProductIds, ...visibleIds])));
   };
 
   const filteredProducts = products.filter((product) => {
@@ -144,25 +139,59 @@ function Products() {
         />
 
         <button
-          className="upload-btn"
-          onClick={() => setShowBulkModal(true)}
+          className="bulk-delete-btn"
+          onClick={handleBulkDelete}
+          disabled={selectedProductIds.length === 0}
         >
-          <Upload size={18} />
-          Bulk Upload
+          <Trash size={18} />
+          Delete Selected
+          {selectedProductIds.length > 0 && ` (${selectedProductIds.length})`}
         </button>
 
-        <Link
-          to="/products/new"
-          className="new-product-btn"
-        >
-          New Product
-        </Link>
+        <div className="product-creation-menu">
+          <button
+            type="button"
+            className="primary-action-btn"
+            aria-expanded={showCreationOptions}
+            onClick={() => setShowCreationOptions((current) => !current)}
+          >
+            New Product
+          </button>
+
+          {showCreationOptions && (
+            <div className="product-creation-options">
+              <Link to="/products/new" className="creation-option" onClick={() => setShowCreationOptions(false)}>
+                <span className="creation-option-icon">+</span>
+                <span>
+                  <strong>Individual</strong>
+                  <small>Create one product</small>
+                </span>
+              </Link>
+              <Link to="/products/bulk-upload" className="creation-option" onClick={() => setShowCreationOptions(false)}>
+                <Upload size={22} />
+                <span>
+                  <strong>Bulk</strong>
+                  <small>Upload multiple files</small>
+                </span>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="table-wrapper">
         <table>
           <thead>
             <tr>
+              <th className="selection-column">
+                <input
+                  className="selection-checkbox"
+                  type="checkbox"
+                  aria-label="Select all products"
+                  checked={filteredProducts.length > 0 && filteredProducts.every((product) => selectedProductIds.includes(product.id))}
+                  onChange={toggleAllProducts}
+                />
+              </th>
               <th>PRODUCT CODE</th>
               <th>PRODUCT DESCRIPTION</th>
               <th>CUSTOMER</th>
@@ -175,7 +204,7 @@ function Products() {
             {filteredProducts.length === 0 ? (
               <tr>
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="empty-state"
                 >
                   <div className="empty-icon">
@@ -192,6 +221,16 @@ function Products() {
             ) : (
               filteredProducts.map((product) => (
                 <tr key={product.id}>
+                  <td>
+                    <input
+                      className="selection-checkbox"
+                      type="checkbox"
+                      aria-label={`Select product ${product.sku}`}
+                      checked={selectedProductIds.includes(product.id)}
+                      onChange={() => toggleProductSelection(product.id)}
+                    />
+                  </td>
+
                   <td>{product.sku}</td>
 
                   <td>{product.name}</td>
@@ -219,57 +258,6 @@ function Products() {
           </tbody>
         </table>
       </div>
-
-      {showBulkModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Bulk Upload Products</h3>
-
-            <select
-              value={bulkCustomer}
-              onChange={(e) =>
-                setBulkCustomer(e.target.value)
-              }
-            >
-              <option value="">
-                Select Customer
-              </option>
-
-              {customers.map((customer) => (
-                <option
-                  key={customer.id}
-                  value={customer.id}
-                >
-                  {customer.company_name}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="file"
-              multiple
-              accept=".xlsx,.xls"
-              onChange={(e) =>
-                setBulkFiles(
-                  Array.from(e.target.files)
-                )
-              }
-            />
-
-            <button onClick={handleBulkUpload}>
-              Upload
-            </button>
-
-            <button
-              onClick={() =>
-                setShowBulkModal(false)
-              }
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

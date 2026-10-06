@@ -4,7 +4,7 @@ from django.urls import path
 from .views import (worksheet_data, save_worksheet, reject_report_data, save_reject_report, checksheet_data,
                     save_checksheet, stocktake_data, save_stocktake, traceability_data, save_traceability, 
                     analytics_data,RegisterView, workpack_data, save_user_settings, current_user, admin_users,
-                    change_user_role, change_password, report)
+                    change_user_role, change_password)
 
 from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView,)
 
@@ -116,10 +116,5 @@ urlpatterns = router.urls + [
         "settings/change-password/",
         change_password,
         name="change-password"
-    ),
-    path(
-        "report/",
-        report,
-        name="report"
     ),
 ]
