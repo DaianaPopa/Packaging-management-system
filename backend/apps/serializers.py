@@ -139,8 +139,8 @@ class ProductSerializer(serializers.ModelSerializer):
     files = UploadedFileSerializer(many=True, read_only=True)
     packaging_specifications = PackagingSpecificationSerializer(many=True, read_only=True)
 
-    components = serializers.SerializerMethodField()
-    packing_process = serializers.SerializerMethodField()
+    components = ComponentSerializer(many=True, required=False, write_only=True)
+    packing_process = PackingProcessStepSerializer(many=True, required=False, write_only=True)
 
     def get_components(self, obj):
         spec = obj.packaging_specifications.first()
@@ -153,6 +153,39 @@ class ProductSerializer(serializers.ModelSerializer):
         if not spec:
             return []
         return PackingProcessStepSerializer(spec.packing_process_steps.all(), many=True).data
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["components"] = self.get_components(instance)
+        representation["packing_process"] = self.get_packing_process(instance)
+        return representation
+
+    def update(self, instance, validated_data):
+        components = validated_data.pop("components", None)
+        packing_process = validated_data.pop("packing_process", None)
+        product = super().update(instance, validated_data)
+
+        if components is not None or packing_process is not None:
+            specification, _ = PackagingSpecification.objects.get_or_create(
+                product=product,
+                version="V1",
+            )
+
+            if components is not None:
+                specification.components.all().delete()
+                Component.objects.bulk_create([
+                    Component(packaging_specification=specification, **component)
+                    for component in components
+                ])
+
+            if packing_process is not None:
+                specification.packing_process_steps.all().delete()
+                PackingProcessStep.objects.bulk_create([
+                    PackingProcessStep(packaging_specification=specification, **step)
+                    for step in packing_process
+                ])
+
+        return product
 
     class Meta:
         model = Product

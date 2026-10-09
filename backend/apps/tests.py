@@ -352,6 +352,59 @@ class PackagingManagementSystemTests(APITestCase):
             "hand"
         )
 
+    def test_update_product_persists_components_and_steps(self):
+        self.client.force_authenticate(user=self.user)
+        specification = PackagingSpecification.objects.create(
+            product=self.product,
+            version="V1",
+        )
+        Component.objects.create(
+            packaging_specification=specification,
+            component_name="Old component",
+        )
+        PackingProcessStep.objects.create(
+            packaging_specification=specification,
+            step_number=1,
+            instruction="Old step",
+        )
+
+        response = self.client.put(
+            reverse("product-detail", kwargs={"pk": self.product.id}),
+            {
+                "customer": self.customer.id,
+                "sku": self.product.sku,
+                "name": "Updated product",
+                "description": "Updated notes",
+                "transaction": "hand",
+                "pallet_configuration": "15",
+                "date_set_up": "2026-10-09",
+                "suspend_record": True,
+                "issue": "Updated issue",
+                "issue_date": "2026-10-08",
+                "components": [
+                    {
+                        "component_sku": "COMP-1",
+                        "component_name": "New component",
+                        "supplier": "Supplier",
+                        "units_per_piece": "2",
+                        "units_per_outer": "8",
+                    }
+                ],
+                "packing_process": [
+                    {"step_number": 1, "instruction": "New step"}
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.name, "Updated product")
+        self.assertTrue(self.product.suspend_record)
+        self.assertEqual(specification.components.count(), 1)
+        self.assertEqual(specification.components.get().component_name, "New component")
+        self.assertEqual(specification.packing_process_steps.get().instruction, "New step")
+
     # ---------------------------------------------------------
 
     def test_10_delete_product(self):
@@ -1277,6 +1330,116 @@ class PackagingManagementSystemTests(APITestCase):
                 product=product
             ).exists()
         )
+
+        product = Product.objects.get(sku="EXCEL001")
+        specification = product.packaging_specifications.get()
+        self.assertEqual(product.name, "Excel Test Product")
+        self.assertEqual(product.inner_barcode, "111111")
+        self.assertEqual(product.outer_barcode, "222222")
+        self.assertEqual(specification.units_per_outer, 10)
+        self.assertEqual(specification.ti, 5)
+        self.assertEqual(specification.hi, 4)
+
+    def test_bulk_upload_extracts_packaging_spec_layout(self):
+        self.client.force_authenticate(user=self.user)
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.append(["Product", "Spec Layout Product", None, None, "Units per Outer", 8])
+        worksheet.append(["SKU", "SPEC001", None, None, "Ti", 22])
+        worksheet.append(["Unit Barcode", "111111", None, None, "Hi", 8])
+        worksheet.append(["Outer Barcode", "222222", None, None, "TPQ", 176])
+        worksheet.append(["Components"])
+        worksheet.append(["SKU", "Component", None, None, "Supplier", "Units per Piece", "Units Per Outer"])
+        worksheet.append(["COMP001", "Carton", None, None, "Supplier Ltd", 1, 8])
+        worksheet.append(["Packing Process"])
+        worksheet.append([None])
+        worksheet.append([1, "Pack product into carton"])
+        file_object = BytesIO()
+        workbook.save(file_object)
+        file_object.seek(0)
+        excel_file = SimpleUploadedFile(
+            "spec_layout.xlsx",
+            file_object.read(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+        response = self.client.post(
+            reverse("product-bulk-upload"),
+            {"customer": self.customer.id, "files": [excel_file]},
+            format="multipart",
+        )
+
+        self.assertEqual(response.data["created"], 1, response.data)
+        product = Product.objects.get(sku="SPEC001")
+        self.assertEqual(product.name, "Spec Layout Product")
+        self.assertEqual(product.inner_barcode, "111111")
+        self.assertEqual(product.outer_barcode, "222222")
+        specification = product.packaging_specifications.get()
+        self.assertEqual(specification.units_per_outer, 8)
+        self.assertEqual(specification.ti, 22)
+        self.assertEqual(specification.hi, 8)
+        component = specification.components.get()
+        self.assertEqual(component.component_name, "Carton")
+        self.assertEqual(component.supplier, "Supplier Ltd")
+        self.assertEqual(component.units_per_piece, "1")
+        self.assertEqual(component.units_per_outer, "8")
+        self.assertEqual(specification.packing_process_steps.get().instruction, "Pack product into carton")
+
+    def test_create_product_with_file_persists_product_details(self):
+        self.client.force_authenticate(user=self.user)
+        temporary_file = UploadedFile.objects.create(
+            original_name="product.xlsx",
+            file=SimpleUploadedFile("product.xlsx", b"workbook"),
+        )
+
+        response = self.client.post(
+            reverse("product-create-with-file"),
+            {
+                "temp_file_id": temporary_file.id,
+                "customer": self.customer.id,
+                "sku": "SAVED001",
+                "name": "Saved product",
+                "description": "Product notes",
+                "transaction": "hand",
+                "pallet_configuration": "12",
+                "date_set_up": "2026-10-09",
+                "issue": "Issue 1",
+                "issue_date": "2026-10-08",
+                "inner_barcode": "111",
+                "outer_barcode": "222",
+                "components": "[]",
+                "steps": "[]",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        product = Product.objects.get(sku="SAVED001")
+        self.assertEqual(product.name, "Saved product")
+        self.assertEqual(product.description, "Product notes")
+        self.assertEqual(product.transaction, "hand")
+        self.assertEqual(product.inner_barcode, "111")
+        self.assertEqual(product.outer_barcode, "222")
+
+    def test_create_product_without_file(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse("product-create-with-file"),
+            {
+                "customer": self.customer.id,
+                "sku": "NOFILE001",
+                "name": "Manual product",
+                "components": "[]",
+                "steps": "[]",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        product = Product.objects.get(sku="NOFILE001")
+        self.assertEqual(product.name, "Manual product")
+        self.assertIsNone(product.packaging_specifications.get().uploaded_file)
 
     # =========================================================
     # WORKPACK UNIQUE CONSTRAINT

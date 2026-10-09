@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, PackageOpen, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../services/api";
 
 function ProductBulkUpload() {
   const [customers, setCustomers] = useState([]);
@@ -9,7 +10,7 @@ function ProductBulkUpload() {
   const [status, setStatus] = useState("");
 
   useEffect(() => {
-    fetch("https://daianapopa.pythonanywhere.com/api/customers/")
+    fetch(`${API_BASE_URL}/customers/`)
       .then((response) => response.json())
       .then((data) => setCustomers(data))
       .catch((error) => console.error(error));
@@ -32,7 +33,7 @@ function ProductBulkUpload() {
 
     try {
       const response = await fetch(
-        "https://daianapopa.pythonanywhere.com/api/products/bulk-upload/",
+        `${API_BASE_URL}/products/bulk-upload/`,
         {
           method: "POST",
           body: formData,
@@ -44,9 +45,20 @@ function ProductBulkUpload() {
         throw new Error(result.error || "Upload failed");
       }
 
-      setStatus(result.message || "Upload complete");
-      setBulkFiles([]);
-      setBulkCustomer("");
+      const failures = (result.errors || [])
+        .map((item) => `${item.file}: ${item.error}`)
+        .join("; ");
+
+      if (result.created > 0) {
+        setBulkFiles([]);
+        setBulkCustomer("");
+      }
+
+      setStatus(
+        failures
+          ? `${result.created} uploaded, ${result.failed} failed. ${failures}`
+          : result.message || "Upload complete"
+      );
     } catch (error) {
       console.error(error);
       setStatus("Upload failed. Please try again.");

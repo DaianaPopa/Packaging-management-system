@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import SearchBar from "../components/common/SearchBar";
+import { API_BASE_URL } from "../services/api";
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -28,7 +29,7 @@ function Customers() {
   const fetchCustomers = async () => {
     try {
       const response = await fetch(
-        "https://daianapopa.pythonanywhere.com/api/customers/"
+        `${API_BASE_URL}/customers/`
       );
 
       const data = await response.json();
@@ -51,7 +52,7 @@ function Customers() {
 
     try {
       const response = await fetch(
-        "https://daianapopa.pythonanywhere.com/api/customers/bulk-delete/",
+        `${API_BASE_URL}/customers/bulk-delete/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -922,7 +922,16 @@ class ProductViewSet(viewsets.ModelViewSet):
                     temp_file.file.path
                 )
 
-                sku = extracted.get("sku", "")
+                sku = str(extracted.get("sku") or "").strip()
+                name = str(extracted.get("name") or "").strip()
+
+                if not sku or not name:
+                    errors.append({
+                        "file": file_obj.name,
+                        "error": "Workbook must include a product SKU and name",
+                    })
+                    temp_file.delete()
+                    continue
 
                 if Product.objects.filter(
                     sku=sku
@@ -938,10 +947,10 @@ class ProductViewSet(viewsets.ModelViewSet):
                 product = Product.objects.create(
                     customer_id=customer_id,
                     sku=sku,
-                    name=extracted.get("name", ""),
+                    name=name,
                     description="",
                     date_set_up=timezone.now().date(),
-                    transaction="other",
+                    transaction=extracted.get("transaction", ""),
                     inner_barcode=extracted.get(
                         "inner_barcode",
                         ""
@@ -965,12 +974,11 @@ class ProductViewSet(viewsets.ModelViewSet):
                     product=product,
                     uploaded_file=temp_file,
                     version="V1",
-                    units_per_outer=extracted.get(
-                        "units_per_outer",
-                        0
-                    ) or 0,
-                    ti=extracted.get("ti", 0) or 0,
-                    hi=extracted.get("hi", 0) or 0,
+                    units_per_outer=self._integer_or_zero(
+                        extracted.get("units_per_outer")
+                    ),
+                    ti=self._integer_or_zero(extracted.get("ti")),
+                    hi=self._integer_or_zero(extracted.get("hi")),
                 )
 
                 for comp in extracted.get(
@@ -995,11 +1003,11 @@ class ProductViewSet(viewsets.ModelViewSet):
                         units_per_piece=comp.get(
                             "units_per_piece",
                             ""
-                        ),
+                        ) or "",
                         units_per_outer=comp.get(
                             "units_per_outer",
                             ""
-                        ),
+                        ) or "",
                     )
 
                 for step in extracted.get(
@@ -1035,6 +1043,13 @@ class ProductViewSet(viewsets.ModelViewSet):
             "errors": errors
         })
 
+    @staticmethod
+    def _integer_or_zero(value):
+        try:
+            return int(float(value)) if value not in (None, "") else 0
+        except (TypeError, ValueError):
+            return 0
+
     def get_queryset(self):
 
             queryset = Product.objects.all().order_by("sku")
@@ -1054,14 +1069,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     def create_with_file(self, request):
 
         temp_file_id = request.data.get("temp_file_id")
-        if not temp_file_id:
-            return Response({"error": "temp_file_id is required"}, status=400)
-
-        # Validate temp file
-        try:
-            temp_file = UploadedFile.objects.get(id=temp_file_id)
-        except UploadedFile.DoesNotExist:
-            return Response({"error": "Temporary file not found"}, status=404)
+        temp_file = None
+        if temp_file_id:
+            try:
+                temp_file = UploadedFile.objects.get(id=temp_file_id)
+            except UploadedFile.DoesNotExist:
+                return Response({"error": "Temporary file not found"}, status=404)
 
         # Build product data explicitly
         product_data = {
@@ -1076,6 +1089,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             "issue_date": request.data.get("issue_date"),
             "inner_barcode": request.data.get("inner_barcode", ""),
             "outer_barcode": request.data.get("outer_barcode", ""),
+            "suspend_record": request.data.get("suspend_record", False),
         }
 
         # Create product
@@ -1083,9 +1097,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         product_serializer.is_valid(raise_exception=True)
         product = product_serializer.save()
 
-        # Attach file to product
-        temp_file.product = product
-        temp_file.save()
+        if temp_file:
+            temp_file.product = product
+            temp_file.save()
 
         # Create Packaging Specification
         spec = PackagingSpecification.objects.create(
@@ -1198,6 +1212,7 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
             "hi": "",
             "inner_barcode": "",
             "outer_barcode": "",
+            "transaction": "",
             "components": [],
             "steps": []
         }
@@ -1206,6 +1221,41 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
         # PRODUCT INFORMATION
         # -------------------------------------------------------
          # --------------------------------------------------
+
+        product_headers = None
+        product_header_row = None
+        for row_index, row in enumerate(rows):
+            normalized_cells = [
+                str(cell).strip().upper().replace("_", " ") if cell is not None else ""
+                for cell in row
+            ]
+            if "SKU" in normalized_cells and any(
+                header in normalized_cells
+                for header in ("NAME", "PRODUCT NAME", "PRODUCT DESCRIPTION")
+            ):
+                product_headers = normalized_cells
+                product_header_row = row_index
+                break
+
+        if product_headers is not None and product_header_row + 1 < len(rows):
+            values = rows[product_header_row + 1]
+            header_map = {
+                "SKU": "sku",
+                "NAME": "name",
+                "PRODUCT NAME": "name",
+                "PRODUCT DESCRIPTION": "name",
+                "INNER BARCODE": "inner_barcode",
+                "UNIT BARCODE": "inner_barcode",
+                "OUTER BARCODE": "outer_barcode",
+                "UNITS PER OUTER": "units_per_outer",
+                "TI": "ti",
+                "HI": "hi",
+                "TRANSACTION": "transaction",
+            }
+            for index, header in enumerate(product_headers):
+                target = header_map.get(header)
+                if target and index < len(values) and values[index] is not None:
+                    data[target] = str(values[index]).strip()
 
         for row in rows:
 
@@ -1217,39 +1267,40 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
             if first.upper() == "COMPONENTS":
                 break
 
-            value = None
-            for cell in row[1:]:
-                if cell not in ("", None):
-                    value = cell
-                    break
+            if first.upper() == "COMPONENTS":
+                break
 
-            key = first.upper()
+            if product_headers is not None and first.upper() in product_headers:
+                continue
 
-            if key == "PRODUCT":
-                data["name"] = str(value)
+            for index, cell in enumerate(row[:-1]):
+                key = str(cell).strip().upper().replace("_", " ") if cell is not None else ""
+                value = row[index + 1]
+                if value in (None, ""):
+                    continue
 
-            elif key == "SKU":
-                data["sku"] = str(value)
-
-            elif key == "INNER BARCODE":
-                data["inner_barcode"] = str(value)
-
-            elif key == "OUTER BARCODE":
-                data["outer_barcode"] = str(value)
-
-            elif key == "UNITS PER OUTER":
-                data["units_per_outer"] = value
-
-            elif key == "TI":
-                data["ti"] = value
-
-            elif key == "HI":
-                data["hi"] = value
+                if key == "PRODUCT":
+                    data["name"] = str(value).strip()
+                elif key == "SKU":
+                    data["sku"] = str(value).strip()
+                elif key in ("INNER BARCODE", "UNIT BARCODE"):
+                    data["inner_barcode"] = str(value).strip()
+                elif key == "OUTER BARCODE":
+                    data["outer_barcode"] = str(value).strip()
+                elif key == "UNITS PER OUTER":
+                    data["units_per_outer"] = value
+                elif key == "TI":
+                    data["ti"] = value
+                elif key == "HI":
+                    data["hi"] = value
+                elif key == "TRANSACTION":
+                    data["transaction"] = str(value).strip()
 
         # -------------------------------------------------------
         # COMPONENTS
         # -------------------------------------------------------
         components_started = False
+        component_headers = {}
 
         for row in rows:
 
@@ -1261,6 +1312,11 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
             # Find header
             if first == "SKU" and len(row) > 1 and row[1] and "COMPONENT" in str(row[1]).upper():
                 components_started = True
+                component_headers = {
+                    str(value).strip().upper(): index
+                    for index, value in enumerate(row)
+                    if value not in (None, "")
+                }
                 continue
 
             if not components_started:
@@ -1273,18 +1329,16 @@ class UploadedFileViewSet(viewsets.ModelViewSet):
             if row[0] in ("", None):
                 continue
 
-            # Remove empty cells while preserving order
-            values = [str(c).strip() for c in row if c not in ("", None)]
-
             component = {
-                "component_sku": values[0] if len(values) > 0 else "",
-                "component_name": values[1] if len(values) > 1 else "",
-                "supplier": values[2] if len(values) > 2 else "",
-                "units_per_piece": values[-2] if len(values) >= 4 else "",
-                "units_per_outer": values[-1] if len(values) >= 5 else "",
+                "component_sku": str(row[component_headers.get("SKU", 0)] or "").strip(),
+                "component_name": str(row[component_headers.get("COMPONENT", 1)] or "").strip(),
+                "supplier": str(row[component_headers.get("SUPPLIER", 2)] or "").strip(),
+                "units_per_piece": str(row[component_headers.get("UNITS PER PIECE", 3)] or "").strip(),
+                "units_per_outer": str(row[component_headers.get("UNITS PER OUTER", 4)] or "").strip(),
             }
 
-            data["components"].append(component)
+            if component["component_sku"] or component["component_name"]:
+                data["components"].append(component)
 
         # -------------------------------------------------------
         # PACKING PROCESS

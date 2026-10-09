@@ -1,7 +1,9 @@
 import axios from "axios";
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+
 const api = axios.create({
-  baseURL: "https://daianapopa.pythonanywhere.com/api",
+  baseURL: API_BASE_URL,
 });
 
 export default api;

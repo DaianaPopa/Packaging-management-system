@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../services/api";
 
 function ProductDetail() {
   const { id } = useParams();
@@ -13,6 +14,7 @@ function ProductDetail() {
   const [customers, setCustomers] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [tempFileId, setTempFileId] = useState(null);
+  const [saveError, setSaveError] = useState("");
 
   const [formData, setFormData] = useState({
     productCode: "",
@@ -20,7 +22,9 @@ function ProductDetail() {
     customer: "",
     productDescription: "",
     productNotes: "",
-    suspendRecord: "N",
+    innerBarcode: "",
+    outerBarcode: "",
+    suspendRecord: false,
     palletisationStatistics: "",
     transaction: "",
     issue: "",
@@ -32,7 +36,7 @@ function ProductDetail() {
 
   // Load customers
   useEffect(() => {
-    fetch("https://daianapopa.pythonanywhere.com/api/customers/")
+    fetch(`${API_BASE_URL}/customers/`)
       .then((res) => res.json())
       .then((data) => setCustomers(data));
   }, []);
@@ -41,7 +45,7 @@ function ProductDetail() {
   useEffect(() => {
     if (isNewProduct) return;
 
-    fetch(`https://daianapopa.pythonanywhere.com/api/products/${id}/`)
+    fetch(`${API_BASE_URL}/products/${id}/`)
       .then((res) => res.json())
       .then((product) => {
         setFormData((prev) => ({
@@ -50,11 +54,14 @@ function ProductDetail() {
           customer: product.customer || "",
           productDescription: product.name || "",
           productNotes: product.description || "",
+          innerBarcode: product.inner_barcode || "",
+          outerBarcode: product.outer_barcode || "",
           transaction: product.transaction || "",
           palletisationStatistics: product.pallet_configuration || "",
           issue: product.issue || "",
           issueDate: product.issue_date || "",
           dateSetUp: product.date_set_up || "",
+          suspendRecord: Boolean(product.suspend_record),
 
           packingProcess: product.packing_process || [],
 
@@ -75,7 +82,7 @@ function ProductDetail() {
 
     try {
       const autoFillResponse = await fetch(
-        "https://daianapopa.pythonanywhere.com/api/uploadedfiles/upload-temp/",
+        `${API_BASE_URL}/uploadedfiles/upload-temp/`,
         {
           method: "POST",
           body: uploadData,
@@ -95,6 +102,8 @@ function ProductDetail() {
         ...prev,
         productCode: extracted.sku || "",
         productDescription: extracted.name || "",
+        innerBarcode: extracted.inner_barcode || "",
+        outerBarcode: extracted.outer_barcode || "",
         palletisationStatistics: extracted.units_per_outer || "",
         transaction: extracted.transaction || "",
         components: extracted.components || [],
@@ -109,53 +118,73 @@ function ProductDetail() {
   // Save product (multipart/form-data)
   const handleSave = async (e) => {
     e.preventDefault();
+    setSaveError("");
 
-    if (!tempFileId) {
-      alert("Please attach a file first.");
-      return;
-    }
+    const productPayload = {
+      customer: formData.customer,
+      sku: formData.productCode,
+      name: formData.productDescription,
+      description: formData.productNotes,
+      transaction: formData.transaction,
+      pallet_configuration: formData.palletisationStatistics,
+      date_set_up: formData.dateSetUp,
+      issue: formData.issue,
+      issue_date: formData.issueDate || null,
+      suspend_record: Boolean(formData.suspendRecord),
+      inner_barcode: formData.innerBarcode || "",
+      outer_barcode: formData.outerBarcode || "",
+      components: formData.components.map(({ id, ...component }) => component),
+      packing_process: formData.packingProcess.map(({ id, ...step }) => step),
+    };
 
-    const fd = new FormData();
+    try {
+      let response;
 
-    fd.append("customer", formData.customer);
-    fd.append("sku", formData.productCode);
-    fd.append("name", formData.productDescription);
-    fd.append("description", formData.productNotes);
-    fd.append("transaction", formData.transaction);
-    fd.append("pallet_configuration", formData.palletisationStatistics);
-    fd.append("date_set_up", formData.dateSetUp);
-    fd.append("issue", formData.issue);
-    fd.append("issue_date", formData.issueDate);
+      if (isNewProduct) {
+        const formDataPayload = new FormData();
+        Object.entries(productPayload).forEach(([key, value]) => {
+          if (key !== "components" && key !== "packing_process") {
+            formDataPayload.append(key, value ?? "");
+          }
+        });
+        formDataPayload.append("components", JSON.stringify(productPayload.components));
+        formDataPayload.append("steps", JSON.stringify(productPayload.packing_process));
+        if (tempFileId) {
+          formDataPayload.append("temp_file_id", tempFileId);
+        }
 
-    fd.append("temp_file_id", tempFileId);
-
-    // ⭐ MUST be JSON strings
-    fd.append("components", JSON.stringify(formData.components));
-    fd.append("steps", JSON.stringify(formData.packingProcess));
-
-    const response = await fetch(
-      "https://daianapopa.pythonanywhere.com/api/products/create-with-file/",
-      {
-        method: "POST",
-        body: fd, 
+        response = await fetch(`${API_BASE_URL}/products/create-with-file/`, {
+          method: "POST",
+          body: formDataPayload,
+        });
+      } else {
+        response = await fetch(`${API_BASE_URL}/products/${id}/`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productPayload),
+        });
       }
-    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log("Save error:", errorText);
-      alert("Error saving product.");
-      return;
+      const result = await response.json();
+      if (!response.ok) {
+        const details = Object.entries(result)
+          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
+          .join("; ");
+        throw new Error(details || "The product could not be saved.");
+      }
+
+      alert("Product saved successfully!");
+      navigate("/products");
+    } catch (error) {
+      console.error("Save error:", error);
+      setSaveError(error.message || "Error saving product.");
     }
-
-    alert("Product saved successfully!");
-    navigate("/products");
   };
 
   const handleDelete = async () => {
     if (!window.confirm("Delete this product?")) return;
 
-    await fetch(`https://daianapopa.pythonanywhere.com/api/products/${id}/`, {
+    await fetch(`${API_BASE_URL}/products/${id}/`, {
       method: "DELETE",
     });
 
@@ -171,6 +200,8 @@ function ProductDetail() {
       </div>
 
       <form className="product-form" onSubmit={handleSave}>
+        {saveError && <p className="form-error" role="alert">{saveError}</p>}
+
         <div className="form-actions">
           {!isEditing && (
             <>
@@ -315,7 +346,7 @@ function ProductDetail() {
             name="palletConfiguration"
             value={formData.palletisationStatistics}
             onChange={(e) =>
-              setFormData((prev) => ({ ...prev, pallet_configuration: e.target.value }))
+              setFormData((prev) => ({ ...prev, palletisationStatistics: e.target.value }))
             }
             disabled={!isEditing}
           />

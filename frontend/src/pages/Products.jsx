@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, Eye, Pencil, Package, Upload, Trash } from "lucide-react";
 import SearchBar from "../components/common/SearchBar";
+import { API_BASE_URL } from "../services/api";
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -23,7 +24,7 @@ function Products() {
   const fetchProducts = async () => {
     try {
       const response = await fetch(
-        "https://daianapopa.pythonanywhere.com/api/products/"
+        `${API_BASE_URL}/products/`
       );
 
       const data = await response.json();
@@ -42,7 +43,7 @@ function Products() {
 
     try {
       const response = await fetch(
-        "https://daianapopa.pythonanywhere.com/api/products/bulk-delete/",
+        `${API_BASE_URL}/products/bulk-delete/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
