@@ -7,7 +7,7 @@ import SideBar from "./components/layout/SideBar";
 
 // Reports
 import WorksheetEditor from "./components/reports/WorksheetEditor";
-import TraceabilityEditor from "./components/reports/TraceabilityEditor";
+import TraceabilityEditor from "./components/reports/traceabilityEditor";
 import RejectReportEditor from "./components/reports/RejectReportEditor";
 import ChecksheetEditor from "./components/reports/ChecksheetEditor";
 import StocktakeEditor from "./components/reports/StocktakeEditor";
