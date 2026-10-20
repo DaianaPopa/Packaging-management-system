@@ -188,57 +188,57 @@
 
 .physical-stock-table th:nth-child(1),
 .physical-stock-table td:nth-child(1) {
-    width: 15%;
+    width: 8%;
 }
 
 .physical-stock-table th:nth-child(2),
 .physical-stock-table td:nth-child(2) {
-    width: 40%;
+    width: 24%;
 }
 
 .physical-stock-table th:nth-child(3),
 .physical-stock-table td:nth-child(3) {
-    width: 15%;
+    width: 8%;
 }
 
 .physical-stock-table th:nth-child(4),
 .physical-stock-table td:nth-child(4) {
-    width: 10%;
+    width: 8%;
 }
 
 .physical-stock-table th:nth-child(5),
 .physical-stock-table td:nth-child(5) {
-    width: 8%;
+    width: 7.4%;
 }
 
 .physical-stock-table th:nth-child(6),
 .physical-stock-table td:nth-child(6) {
-    width: 8%;
+    width: 7.4%;
 }
 
 .physical-stock-table th:nth-child(7),
 .physical-stock-table td:nth-child(7) {
-    width: 8%;
+    width: 7.4%;
 }
 
 .physical-stock-table th:nth-child(8),
 .physical-stock-table td:nth-child(8) {
-    width: 8%;
+    width: 7.4%;
 }
 
 .physical-stock-table th:nth-child(9),
 .physical-stock-table td:nth-child(9) {
-    width: 1%;
+    width: 7.4%;
 }
 
 .physical-stock-table th:nth-child(10),
 .physical-stock-table td:nth-child(10) {
-    width: 7%;
+    width: 7.4%;
 }
 
 .physical-stock-table th:nth-child(11),
 .physical-stock-table td:nth-child(11) {
-    width: 7%;
+    width: 7.4%;
 }
 
 
@@ -289,6 +289,22 @@
 }
 
 @media print {
+
+    .physical-stock-table th,
+    .physical-stock-table td {
+        font-size: 9pt;
+        line-height: 1.25;
+    }
+
+    .physical-stock-table tbody td {
+        height: 9mm;
+        padding: 1.5mm 1mm;
+    }
+
+    .physical-stock-table thead tr:nth-child(2) th {
+        height: 16mm;
+        font-size: 8pt;
+    }
 
     body * {
         visibility: hidden;

@@ -527,17 +527,16 @@
 
     .reject-table th,
     .reject-table td {
-        padding: 1px;
-        font-size: 9px;
+        padding: 1.5mm;
+        font-size: 10pt;
     }
 
-    .reject-table tbody tr {
-        min-height: 22px;
-        height: 22px;
+    .reject-table tbody td {
+        height: 8mm;
     }
 
     .reject-table tbody tr:has(.reject-product) {
-        min-height: 32px;
+        min-height: 8mm;
         height: auto;
     }
 
@@ -547,7 +546,7 @@
 
     .reject-product strong,
     .reject-product span {
-        font-size: 8px;
+        font-size: 9pt;
     }
 
     body {

@@ -28,6 +28,11 @@
         gap: 10px;
     }
 
+    .outer-coding-box,
+    .product-column {
+        width: 100%;
+    }
+
     .header-box.date {
         width: min(170px, 100%);
     }
@@ -74,7 +79,7 @@
 
 .header-box div,
 .header-box input {
-    height: 26px;
+    min-height: 30px;
     border: none;
     padding: 5px 4px;
     outline: none;
@@ -121,7 +126,8 @@
 ================================================== */
 
 .outer-coding-box {
-    width: 60%;
+    width: 58%;
+    min-width: 0;
     min-height: 300px;
     align-self: stretch;
     border: 1px solid #000;
@@ -142,28 +148,35 @@
 ================================================== */
 
 .product-column {
-    width: 32%;
+    width: 40%;
+    min-width: 0;
 }
 
 .time-row {
-    display: flex;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
     margin-bottom: 8px;
 }
 
 .time-box {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    min-width: 0;
 }
 
 .time-box label {
+    flex: 0 0 auto;
     font-weight: bold;
     line-height: 1.4;
 }
 
 .time-box input {
-    width: 70px;
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 26px;
     border: none;
     border-bottom: 1px solid #000;
     outline: none;
@@ -171,7 +184,7 @@
 }
 
 .product-coding-box {
-    height: 70px;
+    height: 82px;
     border: 1px solid #000;
     display: flex;
     justify-content: center;
@@ -194,7 +207,7 @@
 }
 
 .evidence-box {
-    height: 115px;
+    height: 130px;
     border: 1px solid #000;
 }
 
@@ -282,6 +295,33 @@
     .outer-coding-box {
         height: auto;
         min-height: 0;
+    }
+
+    .datecoding-page {
+        font-size: 11pt;
+    }
+
+    .header-box label,
+    .instruction-text,
+    .change-note,
+    .ccp-note,
+    .time-box label {
+        font-size: 10pt;
+    }
+
+    .time-box input {
+        min-height: 8mm;
+        border-bottom: 1px solid #000 !important;
+    }
+
+    .product-coding-box {
+        height: 22mm;
+        flex: 0 0 auto;
+    }
+
+    .evidence-box {
+        height: 36mm;
+        flex: 0 0 auto;
     }
 
     .worksheet-buttons,

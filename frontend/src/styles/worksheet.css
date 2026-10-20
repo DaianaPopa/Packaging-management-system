@@ -254,14 +254,14 @@
     .job-row {
         min-height: 9mm;
         padding: 3px;
-        font-size: 8pt;
+        font-size: 9pt;
     }
 
     .pallet-table th,
     .pallet-table td {
-        height: 5mm;
-        padding: 1px;
-        font-size: 8pt;
+        height: 7mm;
+        padding: 1.5mm;
+        font-size: 9pt;
     }
 
     .worksheet-footer {
@@ -293,7 +293,7 @@
 
     .footer-item span {
         width: 65%;
-        font-size: 8pt;
+        font-size: 9pt;
     }
 
     .signature-line {
