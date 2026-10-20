@@ -36,7 +36,7 @@ function Header() {
         </h1>
 
         <span className="system-name">
-          Packaging System
+          Solutions Limited
         </span>
       </div>
 
