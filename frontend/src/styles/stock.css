@@ -3,7 +3,7 @@
 ================================================== */
 
 .stocktake-page {
-    width: 297mm;
+    width: min(100%, 297mm);
     min-height: 210mm;
     margin: 0 auto;
     padding: 4mm;
@@ -11,6 +11,7 @@
     font-family: Arial, Helvetica, sans-serif;
     font-size: 11px;
     box-sizing: border-box;
+    overflow-x: auto;
 }
 
 
@@ -27,7 +28,7 @@
 }
 
 .job-line,
-.signature-line,
+.stocktake-signature-line,
 .date-line,
 .balance-line {
     display: flex;
@@ -39,20 +40,29 @@
 }
 
 .job-line strong,
-.signature-line strong,
+.stocktake-signature-line strong,
 .date-line strong,
 .balance-line strong {
     white-space: nowrap;
 }
 
-.job-line span {
+.job-line .stocktake-job-value {
     flex: 1;
-    border-bottom: 1px solid #000;
+    min-width: 0;
     min-height: 20px;
-    padding-left: 4px;
+    padding: 0 4px;
+    border-bottom: 1px solid #000;
+    outline: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    cursor: text;
 }
 
-.signature-line input,
+.job-line .stocktake-job-value:focus {
+    border-bottom-color: #000;
+}
+
+.stocktake-signature-line input,
 .date-line input,
 .balance-line input {
     flex: 1;
@@ -61,6 +71,12 @@
     outline: none;
     background: transparent;
     padding: 3px 2px;
+}
+
+.blank-date-line {
+    flex: 1;
+    min-height: 20px;
+    border-bottom: 1px solid #000;
 }
 
 
@@ -72,6 +88,7 @@
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    margin-bottom: 8px;
 }
 
 .physical-stock-table th,
@@ -102,10 +119,11 @@
 }
 
 .physical-stock-table thead tr:nth-child(2) th {
-    height: 42px;
-    font-size: 10px;
+    height: 52px;
+    font-size: 9px;
     line-height: 1.4;
     padding: 5px 3px;
+    overflow-wrap: anywhere;
 }
 
 
@@ -135,6 +153,31 @@
     outline: none;
     padding: 3px 2px;
     box-sizing: border-box;
+}
+
+.physical-stock-table textarea {
+    display: block;
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    border: 0;
+    outline: 0;
+    resize: none;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    text-align: center;
+    background: transparent;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    line-height: 1.4;
+    padding: 3px 2px;
+    box-sizing: border-box;
+    field-sizing: content;
+}
+
+.physical-stock-table tbody td {
+    height: 28px;
 }
 
 

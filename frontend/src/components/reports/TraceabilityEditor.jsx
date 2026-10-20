@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useRef,} from "react";
 import {useNavigate,useSearchParams,} from "react-router-dom";
 import "../../styles/traceability.css";
+import ReportIssueMeta from "./ReportIssueMeta";
 
 
 function TraceabilityEditor() {
     const navigate = useNavigate();
     const traceabilityRef = useRef(null);
     const [searchParams] = useSearchParams();
+
     // ==================================================
     // PRODUCT
     // ==================================================
@@ -26,12 +28,23 @@ function TraceabilityEditor() {
 
     const [loading, setLoading] =useState(true);
     const [components, setComponents] =useState([]);
+    const packedProducts = components.filter(
+        (component) => component.component_sku?.trim().toUpperCase().startsWith("MB")
+    );
+    const productColumnSlots = [
+        ...packedProducts,
+        ...Array.from(
+            { length: Math.max(0, 4 - packedProducts.length) },
+            (_, index) => ({ id: `blank-product-${index}`, isPlaceholder: true })
+        ),
+    ];
     const [traceability, setTraceability] =
         useState({
             customer: "",
             product: "",
             sku: "",
-            date: reportDate,
+            issue: "",
+            date: "",
             processOrder: "",
             outgoingBatchCode: "",
         });
@@ -43,7 +56,7 @@ function TraceabilityEditor() {
 
     const [rows, setRows] = useState(
         Array.from(
-            { length: 10 },
+            { length: 7 },
             () => ({
                 dpNo: "",
                 palletNo: "",
@@ -115,9 +128,10 @@ function TraceabilityEditor() {
                 sku:
                     data.sku || "",
 
-                date:
-                    data.date ||
-                    reportDate,
+                issue:
+                    data.issue || "",
+
+                date: "",
 
                 processOrder: "",
 
@@ -175,6 +189,14 @@ function TraceabilityEditor() {
             }
         );
 
+    }
+
+    function updateComponent(index, field, value) {
+        setComponents((previous) => previous.map((component, componentIndex) =>
+            componentIndex === index
+                ? { ...component, [field]: value }
+                : component
+        ));
     }
 
 
@@ -410,7 +432,9 @@ function TraceabilityEditor() {
 
             product: productId,
 
-            date: traceability.date,
+            date: reportDate,
+
+            issue: traceability.issue,
 
             customer: traceability.customer,
 
@@ -423,6 +447,8 @@ function TraceabilityEditor() {
 
             outgoingBatchCode:
                 traceability.outgoingBatchCode,
+
+            components,
 
             rows: rows,
         };
@@ -476,22 +502,11 @@ function TraceabilityEditor() {
                 id="print-area"
                 ref={traceabilityRef}
             >
-
-                {/* ==================================================
-                    TITLE
-                ================================================== */}
-
                 <h1 className="traceability-title">
-
-                    {traceability.product}
-
-                    {" "}
-
-                    Traceability Sheet -
-                    Multiple Components
-
+                    Traceability Sheet - Multiple Components
                 </h1>
 
+                <ReportIssueMeta issue={traceability.issue} onIssueChange={(value) => setTraceability((previous) => ({ ...previous, issue: value }))} />
 
                 {/* ==================================================
                     HEADER
@@ -503,18 +518,20 @@ function TraceabilityEditor() {
                     {/* LEFT */}
                     <div className="traceability-header-left">
 
-
                         <div>
-
                             <strong>
                                 Customer:
                             </strong>
 
                             {" "}
 
-                            {
-                                traceability.customer
-                            }
+                            <span
+                                contentEditable
+                                suppressContentEditableWarning
+                                onInput={(e) => setTraceability((previous) => ({ ...previous, customer: e.currentTarget.textContent }))}
+                            >
+                                {traceability.customer}
+                            </span>
 
                         </div>
 
@@ -527,7 +544,7 @@ function TraceabilityEditor() {
 
 
                             <input
-                                type="date"
+                                type="text"
                                 value={
                                     traceability.date
                                 }
@@ -596,9 +613,13 @@ function TraceabilityEditor() {
 
                             {" "}
 
-                            {
-                                traceability.product
-                            }
+                            <span
+                                contentEditable
+                                suppressContentEditableWarning
+                                onInput={(e) => setTraceability((previous) => ({ ...previous, product: e.currentTarget.textContent }))}
+                            >
+                                {traceability.product}
+                            </span>
 
                         </div>
 
@@ -646,9 +667,13 @@ function TraceabilityEditor() {
 
                             {" "}
 
-                            {
-                                traceability.sku
-                            }
+                            <span
+                                contentEditable
+                                suppressContentEditableWarning
+                                onInput={(e) => setTraceability((previous) => ({ ...previous, sku: e.currentTarget.textContent }))}
+                            >
+                                {traceability.sku}
+                            </span>
 
                         </div>
 
@@ -683,7 +708,7 @@ function TraceabilityEditor() {
 
                             <th
                                 colSpan={
-                                    components.length * 2
+                                    productColumnSlots.length * 2
                                 }
                             >
                                 DETAILS OF PACKED
@@ -697,8 +722,8 @@ function TraceabilityEditor() {
 
                         <tr>
 
-                            {components.map(
-                                (component) => (
+                            {productColumnSlots.map(
+                                (component, componentIndex) => (
 
                                     <React.Fragment
                                         key={
@@ -708,22 +733,34 @@ function TraceabilityEditor() {
 
                                         <th>
 
-                                            {
-                                                component.component_name
-                                            }
+                                            {!component.isPlaceholder && (
+                                                <span
+                                                    contentEditable
+                                                    suppressContentEditableWarning
+                                                    onInput={(e) => updateComponent(componentIndex, "component_name", e.currentTarget.textContent)}
+                                                >
+                                                    {component.component_name || ""}
+                                                </span>
+                                            )}
 
                                             <br />
 
                                             <small>
-                                                {
-                                                    component.component_sku
-                                                }
+                                                {!component.isPlaceholder && (
+                                                    <span
+                                                        contentEditable
+                                                        suppressContentEditableWarning
+                                                        onInput={(e) => updateComponent(componentIndex, "component_sku", e.currentTarget.textContent)}
+                                                    >
+                                                        {component.component_sku || ""}
+                                                    </span>
+                                                )}
                                             </small>
 
                                         </th>
 
 
-                                        <th>
+                                        <th className="traceability-qty-column">
                                             Qty
                                         </th>
 
@@ -808,12 +845,17 @@ function TraceabilityEditor() {
 
                                     {/* COMPONENTS */}
 
-                                    {components.map(
+                                    {productColumnSlots.map(
                                         (
                                             component
                                         ) => (
 
-                                            <React.Fragment
+                                            component.isPlaceholder ? (
+                                                <React.Fragment key={component.id}>
+                                                    <td></td>
+                                                    <td className="traceability-qty-column"></td>
+                                                </React.Fragment>
+                                            ) : <React.Fragment
                                                 key={
                                                     component.id
                                                 }
@@ -851,7 +893,7 @@ function TraceabilityEditor() {
 
                                                 {/* QUANTITY */}
 
-                                                <td>
+                                                <td className="traceability-qty-column">
 
                                                     <input
                                                         type="number"

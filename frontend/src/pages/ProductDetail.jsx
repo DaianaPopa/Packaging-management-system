@@ -128,8 +128,6 @@ function ProductDetail() {
       transaction: formData.transaction,
       pallet_configuration: formData.palletisationStatistics,
       date_set_up: formData.dateSetUp,
-      issue: formData.issue,
-      issue_date: formData.issueDate || null,
       suspend_record: Boolean(formData.suspendRecord),
       inner_barcode: formData.innerBarcode || "",
       outer_barcode: formData.outerBarcode || "",
@@ -415,13 +413,7 @@ function ProductDetail() {
 
         <input
           value={formData.issue}
-          disabled={!isEditing}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              issue: e.target.value,
-            }))
-          }
+          disabled
         />
       </div>
 
@@ -431,13 +423,7 @@ function ProductDetail() {
         <input
           type="date"
           value={formData.issueDate}
-          disabled={!isEditing}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              issueDate: e.target.value,
-            }))
-          }
+          disabled
         />
       </div>
 

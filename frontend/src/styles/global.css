@@ -116,17 +116,26 @@ body {
 
 
 /*  MAIN LAYOUT*/
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .main-layout {
   display: flex;
+  flex: 1;
+  align-items: stretch;
 }
 
 /* SIDEBAR */
 .sidebar {
-  width: 250px;
+  flex: 0 0 250px;
 
   background: white;
 
   min-height: calc(100vh - 90px);
+  align-self: stretch;
 
   border-right: 1px solid #ddd;
 
@@ -160,6 +169,7 @@ body {
 /* PAGE CONTENT*/
 .page-content {
   flex: 1;
+  min-width: 0;
   padding: 30px;
 }
 

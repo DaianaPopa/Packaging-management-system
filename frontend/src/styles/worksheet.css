@@ -3,13 +3,14 @@
 ================================================== */
 
 .worksheet {
-    width: 210mm;
+    width: min(100%, 210mm);
     min-height: 297mm;
     margin: 0 auto;
     padding: 12mm;
     background: #fff;
     color: #000;
     box-sizing: border-box;
+    overflow-wrap: anywhere;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
 }
@@ -38,6 +39,12 @@
     border: 1px solid #000;
     height: 48px;
     padding: 6px;
+    box-sizing: border-box;
+}
+
+.date-blank {
+    min-width: 100px;
+    height: 24px;
 }
 
 .worksheet-header th {
@@ -53,23 +60,26 @@
 }
 
 /* ==================================================
-   CONTENT
+   CONTENT - MATCH OVERALL HEIGHTS
 ================================================== */
 
 .worksheet-content {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 25px;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* ==================================================
-   JOB DESCRIPTION
+   JOB DESCRIPTION - WIDER COLUMN
 ================================================== */
 
 .job-description {
-    width: 66%;
+    flex: 2;
+    min-width: 0;
     border: 1px solid #000;
+    box-sizing: border-box;
 }
 
 .job-title {
@@ -78,6 +88,7 @@
     padding: 6px;
     border-bottom: 1px solid #000;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
 .job-row {
@@ -86,6 +97,7 @@
     padding: 8px;
     display: flex;
     align-items: center;
+    box-sizing: border-box;
 }
 
 .job-row:last-child {
@@ -93,12 +105,17 @@
 }
 
 /* ==================================================
-   PALLET TABLE
+   PALLET TABLE - NARROWER COLUMN
 ================================================== */
 
 .pallet-table {
-    width: 200px;
+    flex: 1;
+    min-width: 0;
+    width: 0;
+    height: auto;
     border-collapse: collapse;
+    table-layout: fixed;
+    box-sizing: border-box;
 }
 
 .pallet-table th,
@@ -107,6 +124,7 @@
     height: 24px;
     text-align: center;
     padding: 2px;
+    box-sizing: border-box;
 }
 
 .pallet-table th {
@@ -116,6 +134,7 @@
 
 .pallet-table input {
     width: 100%;
+    box-sizing: border-box;
     border: none;
     outline: none;
     text-align: center;
@@ -140,51 +159,9 @@
 }
 
 /* ==================================================
-   PRINT
+   FOOTER
 ================================================== */
 
-@page {
-    size: A4 portrait;
-    margin: 8mm;
-}
-
-@media print {
-    * {
-        margin: 0;
-        padding: 0;
-    }
-
-    body {
-        background: white;
-        padding: 0;
-    }
-
-    .worksheet {
-        width: 210mm;
-        height: auto;
-        min-height: auto;
-        margin: 0;
-        padding: 12mm;
-        page-break-after: auto;
-        box-shadow: none;
-    }
-
-    .worksheet-buttons,
-    .no-print {
-        display: none !important;
-    }
-
-    /* Hide everything else */
-    header,
-    nav,
-    footer,
-    .sidebar,
-    .header {
-        display: none !important;
-    }
-}
-
-/* footer */
 .worksheet-footer {
     margin-top: 10px;
     width: 350px;
@@ -205,4 +182,167 @@
     width: 100px;
     border-bottom: 1px solid black;
     height: 20px;
+}
+
+/* ==================================================
+   PRINT - A4 PORTRAIT
+================================================== */
+
+@page {
+    size: A4 portrait;
+    margin: 8mm;
+}
+
+@media print {
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white;
+    }
+
+    .worksheet-print-page {
+        display: flex;
+        flex-direction: column;
+        height: 210mm;
+        padding: 5mm;
+        box-sizing: border-box;
+    }
+
+    .worksheet {
+        width: 210mm;
+        height: 281mm;
+        min-height: 281mm;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 5mm;
+        overflow: hidden;
+        page-break-after: auto;
+        box-shadow: none;
+    }
+
+    .worksheet-title {
+        font-size: 16pt;
+        margin: 0 0 4mm;
+    }
+
+    .worksheet-header {
+        margin-bottom: 4mm;
+    }
+
+    .worksheet-header th,
+    .worksheet-header td {
+        height: 9mm;
+        padding: 2px 4px;
+    }
+
+    .worksheet-content {
+        gap: 5mm;
+    }
+
+    .job-title {
+        padding: 3px;
+        font-size: 10pt;
+    }
+
+    .job-row {
+        min-height: 9mm;
+        padding: 3px;
+        font-size: 8pt;
+    }
+
+    .pallet-table th,
+    .pallet-table td {
+        height: 5mm;
+        padding: 1px;
+        font-size: 8pt;
+    }
+
+    .worksheet-footer {
+        width: 100%;
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 8mm;
+        padding-top: 3mm;
+    }
+
+    .worksheet-issue-date {
+        display: flex;
+        justify-content: flex-start;
+        gap: 8mm;
+        margin: 0 0 2mm;
+        text-align: left;
+        font-size: 9pt;
+        font-weight: bold;
+    }
+
+    .worksheet-print-page .worksheet-footer {
+        flex: 0 0 auto;
+    }
+
+    .footer-item {
+        margin-bottom: 2mm;
+    }
+
+    .footer-item span {
+        width: 65%;
+        font-size: 8pt;
+    }
+
+    .signature-line {
+        height: 5mm;
+    }
+
+    .worksheet-buttons,
+    .no-print {
+        display: none !important;
+    }
+
+    /* Hide application navigation */
+    header,
+    nav,
+    footer,
+    .sidebar,
+    .header {
+        display: none !important;
+    }
+
+    /* Keep input fields clean when printed */
+    input {
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+    }
+
+    [contenteditable="true"] {
+        outline: none !important;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .worksheet {
+        min-height: 0;
+        padding: clamp(12px, 3vw, 32px);
+    }
+
+    .worksheet-title {
+        font-size: clamp(18px, 3vw, 24pt);
+    }
+
+    .worksheet-content {
+        flex-wrap: wrap;
+    }
+
+    .job-description,
+    .pallet-table {
+        flex: 1 1 100%;
+        width: 100%;
+    }
 }

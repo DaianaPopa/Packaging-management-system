@@ -4,6 +4,8 @@ import { useSearchParams } from "react-router-dom";
 import "../styles/worksheet.css";
 import "../styles/traceability.css";
 import "../styles/stock.css";
+import ReportIssueMeta from "../components/reports/ReportIssueMeta";
+import StocktakeTable from "../components/reports/StocktakeTable";
 
 function PrintWorkpack() {
     const [searchParams] = useSearchParams();
@@ -28,7 +30,6 @@ function PrintWorkpack() {
             return;
         }
 
-        // Give React time to render everything before opening print.
         const timer = setTimeout(() => {
             window.print();
         }, 800);
@@ -89,6 +90,18 @@ function PrintWorkpack() {
     const rejectReport = workpack.reject_report || {};
     const dateCoding = workpack.date_coding || {};
     const stocktake = workpack.stocktake || {};
+    const traceabilityProducts = (
+        traceability.components || []
+    ).filter(
+        (component) => component.component_sku?.trim().toUpperCase().startsWith("MB")
+    );
+    const traceabilityProductSlots = [
+        ...traceabilityProducts,
+        ...Array.from(
+            { length: Math.max(0, 4 - traceabilityProducts.length) },
+            (_, index) => ({ id: `blank-product-${index}`, isPlaceholder: true })
+        ),
+    ];
 
     return (
         <div className="print-workpack">
@@ -102,6 +115,8 @@ function PrintWorkpack() {
                 <h1 className="worksheet-title">
                     DEKAPAK WORKSHEET
                 </h1>
+
+                <ReportIssueMeta issue={workpack.issue} />
 
                 <table className="worksheet-header">
                     <tbody>
@@ -288,10 +303,10 @@ function PrintWorkpack() {
             <section className="workpack-page traceability-print-page">
 
                 <h1 className="traceability-title">
-                    {traceability.product || ""}
-                    {" "}
                     Traceability Sheet - Multiple Components
                 </h1>
+
+                <ReportIssueMeta issue={workpack.issue} />
 
                 <div className="traceability-header">
 
@@ -363,8 +378,7 @@ function PrintWorkpack() {
 
                             <th
                                 colSpan={
-                                    (traceability.components ||
-                                        []).length * 2
+                                    traceabilityProductSlots.length
                                 }
                             >
                                 DETAILS OF PACKED COMPONENTS
@@ -373,15 +387,14 @@ function PrintWorkpack() {
 
                         <tr>
 
-                            {(traceability.components ||
-                                []).map(
+                            {traceabilityProductSlots.map(
                                     (component) => (
                                         <th
                                             key={
                                                 component.id
                                             }
                                         >
-                                            {component.component_name}
+                                            {component.component_name || ""}
                                         </th>
                                     )
                                 )}
@@ -404,9 +417,11 @@ function PrintWorkpack() {
                                         {row.palletNo || ""}
                                     </td>
 
-                                    {(traceability.components ||
-                                        []).map(
+                                    {traceabilityProductSlots.map(
                                             (component) => {
+                                                if (component.isPlaceholder) {
+                                                    return <td key={component.id}></td>;
+                                                }
 
                                                 const componentData =
                                                     row.components?.find(
@@ -436,7 +451,7 @@ function PrintWorkpack() {
                         {(!traceability.rows ||
                             traceability.rows.length === 0) &&
                             Array.from({
-                                length: 15,
+                                length: 7,
                             }).map((_, index) => (
                                 <tr key={index}>
 
@@ -444,8 +459,7 @@ function PrintWorkpack() {
 
                                     <td></td>
 
-                                    {(traceability.components ||
-                                        []).map(
+                                        {traceabilityProductSlots.map(
                                             (component) => (
                                                 <td
                                                     key={
@@ -474,6 +488,8 @@ function PrintWorkpack() {
                 <h1>
                     REJECT REPORT
                 </h1>
+
+                <ReportIssueMeta issue={workpack.issue} />
 
                 <div className="report-header">
 
@@ -550,6 +566,8 @@ function PrintWorkpack() {
                 <h1>
                     DATE CODING & LABEL CHECK
                 </h1>
+
+                <ReportIssueMeta issue={workpack.issue} />
 
                 <div className="report-header">
 
@@ -634,6 +652,8 @@ function PrintWorkpack() {
                     R21 STOCKTAKE CHECKLIST
                 </h1>
 
+                <ReportIssueMeta issue={workpack.issue} />
+
                 <div className="stocktake-top">
 
                     <div className="job-line">
@@ -645,7 +665,7 @@ function PrintWorkpack() {
 
                     <div className="date-line">
                         <strong>DATE:</strong>{" "}
-                        {stocktake.date || ""}
+                        <span className="blank-date-line"></span>
                     </div>
 
                     <div className="signature-line">
@@ -655,104 +675,28 @@ function PrintWorkpack() {
 
                 </div>
 
-                <table className="physical-stock-table">
+                <StocktakeTable
+                    title="PRODUCT"
+                    product={{
+                        sku: stocktake.product_row?.component_sku || stocktake.sku,
+                        name: stocktake.product_row?.component_name || stocktake.product,
+                    }}
+                    rows={[
+                        stocktake.product_row ||
+                        (stocktake.rows || stocktake.components || []).find(
+                            (row) => row.component_sku?.trim().toUpperCase() === "MB850"
+                        ) || {},
+                    ]}
+                    readOnly
+                />
 
-                    <thead>
-
-                        <tr>
-                            <th colSpan="2">
-                                PACKAGING
-                            </th>
-
-                            <th colSpan="6">
-                                ROOM COUNT
-                            </th>
-
-                            <th colSpan="3">
-                                OFFICE USE ONLY
-                            </th>
-                        </tr>
-
-                        <tr>
-                            <th>CODE</th>
-                            <th>DESCRIPTION</th>
-                            <th>BATCH NO.</th>
-                            <th>BEST BEFORE</th>
-                            <th>QTY / PALLET</th>
-                            <th>QTY IN ROOM</th>
-                            <th>BOXES</th>
-                            <th>SINGLES</th>
-                            <th>ROOM</th>
-                            <th>WAREHOUSE</th>
-                            <th>TOTAL</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {(stocktake.rows ||
-                            stocktake.components ||
-                            []).map(
-                                (row, index) => (
-                                    <tr key={index}>
-
-                                        <td>
-                                            {row.component_sku ||
-                                                row.code ||
-                                                ""}
-                                        </td>
-
-                                        <td>
-                                            {row.component_name ||
-                                                row.description ||
-                                                ""}
-                                        </td>
-
-                                        <td>
-                                            {row.batchNo || ""}
-                                        </td>
-
-                                        <td>
-                                            {row.bestBefore || ""}
-                                        </td>
-
-                                        <td>
-                                            {row.qtyPerPallet ||
-                                                ""}
-                                        </td>
-
-                                        <td>
-                                            {row.qtyInRoom || ""}
-                                        </td>
-
-                                        <td>
-                                            {row.boxes || ""}
-                                        </td>
-
-                                        <td>
-                                            {row.singles || ""}
-                                        </td>
-
-                                        <td>
-                                            {row.room || ""}
-                                        </td>
-
-                                        <td>
-                                            {row.warehouse || ""}
-                                        </td>
-
-                                        <td>
-                                            {row.total || ""}
-                                        </td>
-
-                                    </tr>
-                                )
-                            )}
-
-                    </tbody>
-
-                </table>
+                <StocktakeTable
+                    title="PACKAGING"
+                    rows={(stocktake.rows || stocktake.components || []).filter(
+                        (row) => row.component_sku?.trim().toUpperCase() !== "MB850"
+                    )}
+                    readOnly
+                />
 
             </section>
 

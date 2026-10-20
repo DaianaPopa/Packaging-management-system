@@ -14,6 +14,9 @@ function WorksheetEditor() {
 
     const [loading, setLoading] = useState(true);
     const [worksheet, setWorksheet] = useState(null);
+    const [printDate, setPrintDate] = useState(
+        () => new Date().toLocaleDateString()
+    );
 
     const [pallets, setPallets] = useState(
         Array.from({ length: 20 }, (_, i) => ({
@@ -61,6 +64,7 @@ function WorksheetEditor() {
                 // Make sure editable header values exist
                 customer: data.customer || "",
                 sku: data.sku || "",
+                issue: data.issue || "",
                 pallet_configuration:
                     data.pallet_configuration || "",
                 product: data.product || "",
@@ -158,6 +162,8 @@ function WorksheetEditor() {
     */
 
     const handlePrint = () => {
+        setPrintDate(new Date().toLocaleDateString());
+
         const buttons = document.querySelector(
             ".worksheet-buttons"
         );
@@ -190,8 +196,10 @@ function WorksheetEditor() {
 
                 #print-area {
                     width: 100% !important;
-                    height: auto !important;
-                    min-height: auto !important;
+                    height: 281mm !important;
+                    min-height: 281mm !important;
+                    padding: 5mm !important;
+                    overflow: hidden !important;
                     margin: 0 !important;
                     box-shadow: none !important;
                     page-break-after: auto !important;
@@ -210,7 +218,7 @@ function WorksheetEditor() {
 
         document.head.appendChild(printStyle);
 
-        window.print();
+        requestAnimationFrame(() => window.print());
 
         setTimeout(() => {
             if (buttons) {
@@ -233,6 +241,8 @@ function WorksheetEditor() {
             product: productId,
 
             date: worksheet.date,
+
+            issue: worksheet.issue,
 
             customer: worksheet.customer,
 
@@ -350,6 +360,11 @@ function WorksheetEditor() {
                 <h1 className="worksheet-title">
                     DEKAPAK WORKSHEET
                 </h1>
+
+                <div className="worksheet-issue-date">
+                    <span>Issue No: {worksheet.issue || ""}</span>
+                    <span> Print Date: {printDate}</span>
+                </div>
 
 
                 {/* =================================================
@@ -487,21 +502,8 @@ function WorksheetEditor() {
                                 Date
                             </th>
 
-                            <td>
-
-                                <input
-                                    type="date"
-                                    value={
-                                        worksheet.date || ""
-                                    }
-                                    onChange={(e) =>
-                                        updateHeader(
-                                            "date",
-                                            e.target.value
-                                        )
-                                    }
-                                />
-
+                            <td className="date-blank">
+                                &nbsp;
                             </td>
 
                         </tr>

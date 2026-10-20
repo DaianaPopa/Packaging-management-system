@@ -276,6 +276,10 @@ class PackagingManagementSystemTests(APITestCase):
             ).exists()
         )
 
+        created_product = Product.objects.get(sku="TEST002")
+        self.assertEqual(created_product.issue, "Issue 1")
+        self.assertEqual(created_product.issue_date, date.today())
+
     # ---------------------------------------------------------
 
     def test_08_retrieve_product(self):
@@ -354,6 +358,9 @@ class PackagingManagementSystemTests(APITestCase):
 
     def test_update_product_persists_components_and_steps(self):
         self.client.force_authenticate(user=self.user)
+        self.product.issue = "Issue 1"
+        self.product.issue_date = date(2026, 1, 1)
+        self.product.save(update_fields=["issue", "issue_date"])
         specification = PackagingSpecification.objects.create(
             product=self.product,
             version="V1",
@@ -400,6 +407,8 @@ class PackagingManagementSystemTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.product.refresh_from_db()
         self.assertEqual(self.product.name, "Updated product")
+        self.assertEqual(self.product.issue, "Issue 2")
+        self.assertEqual(self.product.issue_date, date.today())
         self.assertTrue(self.product.suspend_record)
         self.assertEqual(specification.components.count(), 1)
         self.assertEqual(specification.components.get().component_name, "New component")
@@ -621,6 +630,11 @@ class PackagingManagementSystemTests(APITestCase):
             status.HTTP_200_OK
         )
 
+        self.assertEqual(
+            response.data["issue"],
+            self.product.issue
+        )
+
         self.assertIn(
             "worksheet",
             response.data
@@ -655,6 +669,9 @@ class PackagingManagementSystemTests(APITestCase):
 
     def test_18_worksheet_returns_product_information(self):
 
+        self.product.issue = "Issue 7"
+        self.product.save(update_fields=["issue"])
+
         PackagingSpecification.objects.create(
             product=self.product,
             version="V1"
@@ -683,9 +700,16 @@ class PackagingManagementSystemTests(APITestCase):
             "Test Product"
         )
 
+        self.assertIn("issue", response.data)
+
         self.assertEqual(
             response.data["customer"],
             "Test Customer Ltd"
+        )
+
+        self.assertEqual(
+            response.data["issue"],
+            "Issue 7"
         )
 
     # =========================================================
@@ -711,6 +735,8 @@ class PackagingManagementSystemTests(APITestCase):
             response.data["sku"],
             "TEST001"
         )
+
+        self.assertIn("issue", response.data)
 
         self.assertEqual(
             response.data["product"],
@@ -770,6 +796,8 @@ class PackagingManagementSystemTests(APITestCase):
             response.data["sku"],
             "TEST001"
         )
+
+        self.assertIn("issue", response.data)
 
     # ---------------------------------------------------------
 
@@ -836,6 +864,8 @@ class PackagingManagementSystemTests(APITestCase):
             "TEST001"
         )
 
+        self.assertIn("issue", response.data)
+
         self.assertEqual(
             len(response.data["components"]),
             1
@@ -895,6 +925,9 @@ class PackagingManagementSystemTests(APITestCase):
                 status.HTTP_404_NOT_FOUND
             ]
         )
+
+        if response.status_code == status.HTTP_200_OK:
+            self.assertIn("issue", response.data)
 
     # =========================================================
     # ANALYTICS
@@ -1240,6 +1273,10 @@ class PackagingManagementSystemTests(APITestCase):
                 sku="EXCEL001"
             ).exists()
         )
+
+        uploaded_product = Product.objects.get(sku="EXCEL001")
+        self.assertEqual(uploaded_product.issue, "Issue 1")
+        self.assertEqual(uploaded_product.issue_date, date.today())
 
     # =========================================================
     # EXCEL DUPLICATE SKU

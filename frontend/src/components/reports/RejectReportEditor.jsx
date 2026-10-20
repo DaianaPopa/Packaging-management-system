@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../../styles/reject.css";
+import ReportIssueMeta from "./ReportIssueMeta";
 
 function RejectReportEditor() {
     const [searchParams] = useSearchParams();
@@ -38,7 +39,8 @@ function RejectReportEditor() {
         customer: "",
         product: "",
         sku: "",
-        date: reportDate,
+        issue: "",
+        date: "",
     });
 
     /*
@@ -62,6 +64,11 @@ function RejectReportEditor() {
 
     const [productRejects, setProductRejects] =
         useState([]);
+
+    function resizeRejectText(field) {
+        field.style.height = "auto";
+        field.style.height = `${field.scrollHeight}px`;
+    }
 
     /*
     =========================================================
@@ -117,7 +124,8 @@ function RejectReportEditor() {
                 customer: data.customer || "",
                 product: data.product || "",
                 sku: data.sku || "",
-                date: data.date || reportDate,
+                issue: data.issue || "",
+                date: "",
             });
 
             /*
@@ -126,9 +134,12 @@ function RejectReportEditor() {
             =================================================
             */
 
-            const components =
-                (data.components || []).map(
-                    (component) => ({
+            const packagingComponents =
+                (data.components || [])
+                    .filter((component) =>
+                        component.component_sku?.trim().toUpperCase().startsWith("ZM")
+                    )
+                    .map((component) => ({
                         id:
                             `component-${component.id}`,
 
@@ -147,8 +158,23 @@ function RejectReportEditor() {
 
                         inhouse: "",
                         inhouseReason: "",
-                    })
-                );
+                    }));
+
+            const productComponents =
+                (data.components || [])
+                    .filter((component) =>
+                        component.component_sku?.trim().toUpperCase().startsWith("MB")
+                    )
+                    .map((component) => ({
+                        id: `product-${component.id}`,
+                        type: "product",
+                        sku: component.component_sku || "",
+                        name: component.component_name || "",
+                        incoming: "",
+                        incomingReason: "",
+                        inhouse: "",
+                        inhouseReason: "",
+                    }));
 
             /*
             -------------------------------------------------
@@ -158,7 +184,7 @@ function RejectReportEditor() {
 
             const packagingBlankRows =
                 Array.from(
-                    { length: 5 },
+                    { length: 4 },
                     (_, index) => ({
                         id:
                             `packaging-blank-${index}`,
@@ -177,7 +203,7 @@ function RejectReportEditor() {
                 );
 
             setPackagingRejects([
-                ...components,
+                ...packagingComponents,
                 ...packagingBlankRows,
             ]);
 
@@ -188,27 +214,6 @@ function RejectReportEditor() {
             */
 
             /*
-            First row = selected product
-            */
-
-            const productRow = {
-                id: "product-main",
-                type: "product",
-
-                sku:
-                    data.sku || "",
-
-                name:
-                    data.product || "",
-
-                incoming: "",
-                incomingReason: "",
-
-                inhouse: "",
-                inhouseReason: "",
-            };
-
-            /*
             -------------------------------------------------
             ADD 5 COMPLETELY BLANK ROWS
             -------------------------------------------------
@@ -216,7 +221,7 @@ function RejectReportEditor() {
 
             const productBlankRows =
                 Array.from(
-                    { length: 5 },
+                    { length: 4 },
                     (_, index) => ({
                         id:
                             `product-blank-${index}`,
@@ -235,7 +240,7 @@ function RejectReportEditor() {
                 );
 
             setProductRejects([
-                productRow,
+                ...productComponents,
                 ...productBlankRows,
             ]);
 
@@ -403,7 +408,11 @@ function RejectReportEditor() {
     const handleSave = async () => {
         const rejectReportData = {
             product: productId,
-            date: report.date,
+            date: reportDate,
+            issue: report.issue,
+            customer: report.customer,
+            product_name: report.product,
+            sku: report.sku,
             packagingRejects: packagingRejects.map((row) => ({
                 type: row.type,
                 component_id:
@@ -555,6 +564,7 @@ function RejectReportEditor() {
                     REJECT REPORT
                 </h1>
 
+                <ReportIssueMeta issue={report.issue} onIssueChange={(value) => updateReport("issue", value)} />
 
                 {/* ==================================================
                     HEADER
@@ -568,9 +578,7 @@ function RejectReportEditor() {
                             Customer
                         </label>
 
-                        <div>
-                            {report.customer}
-                        </div>
+                        <input type="text" value={report.customer} onChange={(e) => updateReport("customer", e.target.value)} />
 
                     </div>
 
@@ -581,9 +589,7 @@ function RejectReportEditor() {
                             Product
                         </label>
 
-                        <div className="header-value product-name">
-                            {report.product}
-                        </div>
+                        <input className="header-value product-name" type="text" value={report.product} onChange={(e) => updateReport("product", e.target.value)} />
 
                     </div>
 
@@ -593,9 +599,7 @@ function RejectReportEditor() {
                             SKU
                         </label>
 
-                        <div>
-                            {report.sku}
-                        </div>
+                        <input type="text" value={report.sku} onChange={(e) => updateReport("sku", e.target.value)} />
 
                     </div>
 
@@ -607,7 +611,7 @@ function RejectReportEditor() {
                         </label>
 
                         <input
-                            type="date"
+                            type="text"
                             value={
                                 report.date || ""
                             }
@@ -699,34 +703,21 @@ function RejectReportEditor() {
 
                                         <td>
 
-                                            {row.type ===
-                                            "component" ? (
-
-                                                <div className="reject-product">
-
-                                                    <strong>
-                                                        {
-                                                            row.sku
-                                                        }
-                                                    </strong>
-
-                                                    <span>
-                                                        {
-                                                            row.name
-                                                        }
-                                                    </span>
-
+                                            {row.type === "component" ? (
+                                                <div className="manual-reject-product">
+                                                    <textarea rows="1" value={row.sku} onInput={(e) => resizeRejectText(e.currentTarget)} onChange={(e) => updatePackaging(index, "sku", e.target.value)} />
+                                                    <textarea rows="1" value={row.name} onInput={(e) => resizeRejectText(e.currentTarget)} onChange={(e) => updatePackaging(index, "name", e.target.value)} />
                                                 </div>
-
                                             ) : (
 
                                                 <div className="manual-reject-product">
 
-                                                    <input
-                                                        type="text"
+                                                    <textarea
+                                                        rows="1"
                                                         value={
                                                             row.sku
                                                         }
+                                                        onInput={(e) => resizeRejectText(e.currentTarget)}
                                                         onChange={(
                                                             e
                                                         ) =>
@@ -738,11 +729,12 @@ function RejectReportEditor() {
                                                         }
                                                     />
 
-                                                    <input
-                                                        type="text"
+                                                    <textarea
+                                                        rows="1"
                                                         value={
                                                             row.name
                                                         }
+                                                        onInput={(e) => resizeRejectText(e.currentTarget)}
                                                         onChange={(
                                                             e
                                                         ) =>
@@ -788,11 +780,12 @@ function RejectReportEditor() {
 
                                         <td>
 
-                                            <input
-                                                type="text"
+                                            <textarea
+                                                rows="1"
                                                 value={
                                                     row.incomingReason
                                                 }
+                                                onInput={(e) => resizeRejectText(e.currentTarget)}
                                                 onChange={(
                                                     e
                                                 ) =>
@@ -834,11 +827,12 @@ function RejectReportEditor() {
 
                                         <td>
 
-                                            <input
-                                                type="text"
+                                            <textarea
+                                                rows="1"
                                                 value={
                                                     row.inhouseReason
                                                 }
+                                                onInput={(e) => resizeRejectText(e.currentTarget)}
                                                 onChange={(
                                                     e
                                                 ) =>
@@ -924,34 +918,21 @@ function RejectReportEditor() {
 
                                         <td>
 
-                                            {row.type ===
-                                            "product" ? (
-
-                                                <div className="reject-product">
-
-                                                    <strong>
-                                                        {
-                                                            row.sku
-                                                        }
-                                                    </strong>
-
-                                                    <span>
-                                                        {
-                                                            row.name
-                                                        }
-                                                    </span>
-
+                                            {row.type === "product" ? (
+                                                <div className="manual-reject-product">
+                                                    <textarea rows="1" value={row.sku} onInput={(e) => resizeRejectText(e.currentTarget)} onChange={(e) => updateProduct(index, "sku", e.target.value)} />
+                                                    <textarea rows="1" value={row.name} onInput={(e) => resizeRejectText(e.currentTarget)} onChange={(e) => updateProduct(index, "name", e.target.value)} />
                                                 </div>
-
                                             ) : (
 
                                                 <div className="manual-reject-product">
 
-                                                    <input
-                                                        type="text"
+                                                    <textarea
+                                                        rows="1"
                                                         value={
                                                             row.sku
                                                         }
+                                                        onInput={(e) => resizeRejectText(e.currentTarget)}
                                                         onChange={(
                                                             e
                                                         ) =>
@@ -963,11 +944,12 @@ function RejectReportEditor() {
                                                         }
                                                     />
 
-                                                    <input
-                                                        type="text"
+                                                    <textarea
+                                                        rows="1"
                                                         value={
                                                             row.name
                                                         }
+                                                        onInput={(e) => resizeRejectText(e.currentTarget)}
                                                         onChange={(
                                                             e
                                                         ) =>
@@ -1013,11 +995,12 @@ function RejectReportEditor() {
 
                                         <td>
 
-                                            <input
-                                                type="text"
+                                            <textarea
+                                                rows="1"
                                                 value={
                                                     row.incomingReason
                                                 }
+                                                onInput={(e) => resizeRejectText(e.currentTarget)}
                                                 onChange={(
                                                     e
                                                 ) =>
@@ -1059,11 +1042,12 @@ function RejectReportEditor() {
 
                                         <td>
 
-                                            <input
-                                                type="text"
+                                            <textarea
+                                                rows="1"
                                                 value={
                                                     row.inhouseReason
                                                 }
+                                                onInput={(e) => resizeRejectText(e.currentTarget)}
                                                 onChange={(
                                                     e
                                                 ) =>

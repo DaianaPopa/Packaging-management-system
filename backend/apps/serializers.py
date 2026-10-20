@@ -1,3 +1,6 @@
+import re
+
+from django.utils import timezone
 from rest_framework import serializers
 from .models import (
     Customer,
@@ -163,6 +166,15 @@ class ProductSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         components = validated_data.pop("components", None)
         packing_process = validated_data.pop("packing_process", None)
+        validated_data.pop("issue", None)
+        validated_data.pop("issue_date", None)
+
+        match = re.search(r"(\d+)$", instance.issue or "")
+        next_issue = int(match.group(1)) + 1 if match else 1
+        prefix = (instance.issue[:match.start()] if match else "Issue ").strip()
+        instance.issue = f"{prefix} {next_issue}".strip()
+        instance.issue_date = timezone.localdate()
+
         product = super().update(instance, validated_data)
 
         if components is not None or packing_process is not None:
@@ -186,6 +198,11 @@ class ProductSerializer(serializers.ModelSerializer):
                 ])
 
         return product
+
+    def create(self, validated_data):
+        validated_data["issue"] = "Issue 1"
+        validated_data["issue_date"] = timezone.localdate()
+        return super().create(validated_data)
 
     class Meta:
         model = Product

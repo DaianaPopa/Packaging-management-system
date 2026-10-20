@@ -3,7 +3,7 @@
 ================================================== */
 
 .datecoding-page {
-    width: 210mm;
+    width: min(100%, 210mm);
     min-height: 297mm;
     margin: 0 auto;
     padding: 10mm;
@@ -13,6 +13,24 @@
     font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
     line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+@media screen and (max-width: 900px) {
+    .datecoding-page {
+        min-height: 0;
+        padding: clamp(12px, 3vw, 28px);
+    }
+
+    .datecoding-header,
+    .coding-section {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .header-box.date {
+        width: min(170px, 100%);
+    }
 }
 
 .datecoding-title {
@@ -104,7 +122,8 @@
 
 .outer-coding-box {
     width: 60%;
-    height: 250px;
+    min-height: 300px;
+    align-self: stretch;
     border: 1px solid #000;
     display: flex;
     justify-content: center;
@@ -245,10 +264,24 @@
         position: absolute;
         left: 0;
         top: 0;
-        width: 210mm;
-        min-height: 297mm;
-        padding: 10mm;
+        width: 194mm;
+        height: 281mm;
+        min-height: 0;
+        padding: 5mm;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .coding-section {
+        flex: 1 1 0;
+        min-height: 0;
+        margin-bottom: 10px;
+    }
+
+    .outer-coding-box {
+        height: auto;
+        min-height: 0;
     }
 
     .worksheet-buttons,

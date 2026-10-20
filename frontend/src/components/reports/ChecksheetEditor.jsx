@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../../styles/check.css";
+import ReportIssueMeta from "./ReportIssueMeta";
 
 function ChecksheetEditor() {
     const [searchParams] = useSearchParams();
@@ -59,7 +60,8 @@ function ChecksheetEditor() {
                 customer: data.customer || "",
                 product: data.product || "",
                 sku: data.sku || "",
-                date: data.date || reportDate,
+                issue: data.issue || "",
+                date: "",
 
                 time1: "",
                 initial1: "",
@@ -198,7 +200,12 @@ function ChecksheetEditor() {
     const checksheetData = {
             product: productId,
 
-            date: sheet.date,
+            date: reportDate,
+
+            customer: sheet.customer,
+            product_name: sheet.product,
+            sku: sheet.sku,
+            issue: sheet.issue,
 
             time1: sheet.time1,
             initial1: sheet.initial1,
@@ -387,6 +394,7 @@ function ChecksheetEditor() {
                     DATE CODING & LABEL CHECK SHEET
                 </h1>
 
+                <ReportIssueMeta issue={sheet.issue} onIssueChange={(value) => updateSheet("issue", value)} />
 
                 {/* ==================================================
                     HEADER
@@ -404,7 +412,11 @@ function ChecksheetEditor() {
                             {sheet.sku
                                 ? `${sheet.sku} - `
                                 : ""}
-                            {sheet.product}
+                            <input
+                                type="text"
+                                value={sheet.product || ""}
+                                onChange={(e) => updateSheet("product", e.target.value)}
+                            />
                         </div>
 
                     </div>
@@ -417,7 +429,7 @@ function ChecksheetEditor() {
                         </label>
 
                         <input
-                            type="date"
+                            type="text"
                             value={
                                 sheet.date || ""
                             }
@@ -494,7 +506,7 @@ function ChecksheetEditor() {
                             <div className="time-box">
 
                                 <label>
-                                    Time:
+                                    Time
                                 </label>
 
                                 <input
@@ -516,7 +528,7 @@ function ChecksheetEditor() {
                             <div className="time-box">
 
                                 <label>
-                                    Initial:
+                                    Initial
                                 </label>
 
                                 <input
@@ -663,7 +675,7 @@ function ChecksheetEditor() {
                             <div className="time-box">
 
                                 <label>
-                                    Time:
+                                    Time
                                 </label>
 
                                 <input
@@ -685,7 +697,7 @@ function ChecksheetEditor() {
                             <div className="time-box">
 
                                 <label>
-                                    Initial:
+                                    Initial
                                 </label>
 
                                 <input

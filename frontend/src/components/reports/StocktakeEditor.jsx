@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../../styles/stock.css";
+import ReportIssueMeta from "./ReportIssueMeta";
+import StocktakeTable from "./StocktakeTable";
 
 function StocktakeEditor() {
     const [searchParams] = useSearchParams();
@@ -20,10 +22,18 @@ function StocktakeEditor() {
     const [stock, setStock] = useState({
         product: "",
         sku: "",
+        issue: "",
         date: reportDate,
         signature: "",
         balanceOnSystem: "",
     });
+
+    const productCodeRows = components.filter(
+        (component) => component.component_sku?.trim().toUpperCase().startsWith("MB")
+    );
+    const packagingComponents = components.filter(
+        (component) => !component.component_sku?.trim().toUpperCase().startsWith("MB")
+    );
 
     /*
     ---------------------------------------------------------
@@ -65,7 +75,8 @@ function StocktakeEditor() {
             setStock({
                 product: data.product || "",
                 sku: data.sku || "",
-                date: data.date || reportDate,
+                issue: data.issue || "",
+                date: reportDate,
                 signature: "",
                 balanceOnSystem: "",
             });
@@ -113,6 +124,25 @@ function StocktakeEditor() {
         }));
     }
 
+    function updateJobLine(value) {
+        const separatorIndex = value.search(/\s/);
+
+        if (separatorIndex < 0) {
+            setStock((previous) => ({
+                ...previous,
+                sku: value,
+                product: "",
+            }));
+            return;
+        }
+
+        setStock((previous) => ({
+            ...previous,
+            sku: value.slice(0, separatorIndex),
+            product: value.slice(separatorIndex).trimStart(),
+        }));
+    }
+
     /*
     ---------------------------------------------------------
     UPDATE COMPONENT ROW
@@ -132,6 +162,28 @@ function StocktakeEditor() {
         });
     }
 
+    function updatePackagingComponent(index, field, value) {
+        const componentId = packagingComponents[index]?.id;
+        const originalIndex = components.findIndex(
+            (component) => component.id === componentId
+        );
+
+        if (originalIndex >= 0) {
+            updateComponent(originalIndex, field, value);
+        }
+    }
+
+    function updateProductComponent(index, field, value) {
+        const componentId = productCodeRows[index]?.id;
+        const originalIndex = components.findIndex(
+            (component) => component.id === componentId
+        );
+
+        if (originalIndex >= 0) {
+            updateComponent(originalIndex, field, value);
+        }
+    }
+
     /*
     ---------------------------------------------------------
     PRINT
@@ -145,6 +197,22 @@ function StocktakeEditor() {
 
         const originalDisplay =
             buttons?.style.display;
+        const originalZoom =
+            stocktakeRef.current?.style.zoom;
+
+        if (stocktakeRef.current) {
+            const printableWidth = (281 * 96) / 25.4;
+            const printableHeight = (194 * 96) / 25.4;
+            const contentWidth = stocktakeRef.current.scrollWidth;
+            const contentHeight = stocktakeRef.current.scrollHeight;
+            const scale = Math.min(
+                1,
+                printableWidth / contentWidth,
+                printableHeight / contentHeight
+            );
+
+            stocktakeRef.current.style.zoom = String(scale);
+        }
 
         if (buttons) {
             buttons.style.display = "none";
@@ -158,7 +226,7 @@ function StocktakeEditor() {
 
         printStyle.innerHTML = `
             @page {
-                size: A4 landscape !important;
+                size: A4 landscape;
                 margin: 8mm;
             }
 
@@ -194,6 +262,11 @@ function StocktakeEditor() {
                     originalDisplay || "";
             }
 
+            if (stocktakeRef.current) {
+                stocktakeRef.current.style.zoom =
+                    originalZoom || "";
+            }
+
             printStyle.remove();
         }, 1000);
     };
@@ -210,12 +283,14 @@ function StocktakeEditor() {
 
         date: stock.date,
 
+        issue: stock.issue,
+
         signature: stock.signature,
 
         balanceOnSystem:
             stock.balanceOnSystem,
 
-        components: components.map(
+        components: packagingComponents.map(
             (component) => ({
                 component_id: component.id,
 
@@ -253,6 +328,20 @@ function StocktakeEditor() {
                     component.total,
             })
         ),
+        product_rows: productCodeRows.map((component) => ({
+            component_id: component.id,
+            component_sku: component.component_sku,
+            component_name: component.component_name,
+            batch_no: component.batchNo,
+            best_before: component.bestBefore,
+            qty_per_pallet: component.qtyPerPallet,
+            qty_in_room: component.qtyInRoom,
+            boxes: component.boxes,
+            singles: component.singles,
+            room: component.room,
+            warehouse: component.warehouse,
+            total: component.total,
+        })),
     };
 
     try {
@@ -370,6 +459,8 @@ function StocktakeEditor() {
                     R21 STOCKTAKE CHECKLIST
                 </h1>
 
+                <ReportIssueMeta issue={stock.issue} onIssueChange={(value) => updateStock("issue", value)} />
+
                 {/* HEADER */}
 
                 <div className="stocktake-top">
@@ -377,13 +468,19 @@ function StocktakeEditor() {
                     <div className="job-line">
                         <strong>JOB:</strong>
 
-                        <span>
-                            {stock.sku} -{" "}
-                            {stock.product}
+                        <span
+                            className="stocktake-job-value"
+                            contentEditable
+                            suppressContentEditableWarning
+                            role="textbox"
+                            aria-label="Job SKU and product"
+                            onInput={(event) => updateJobLine(event.currentTarget.textContent)}
+                        >
+                            {[stock.sku, stock.product].filter(Boolean).join(" ")}
                         </span>
                     </div>
 
-                    <div className="signature-line">
+                    <div className="stocktake-signature-line">
                         <strong>
                             SIGNATURE:
                         </strong>
@@ -403,17 +500,7 @@ function StocktakeEditor() {
 
                     <div className="date-line">
                         <strong>DATE:</strong>
-
-                        <input
-                            type="date"
-                            value={stock.date}
-                            onChange={(e) =>
-                                updateStock(
-                                    "date",
-                                    e.target.value
-                                )
-                            }
-                        />
+                        <span className="blank-date-line"></span>
                     </div>
 
                     <div className="balance-line">
@@ -436,346 +523,17 @@ function StocktakeEditor() {
 
                 </div>
 
-                {/* MAIN TABLE */}
+                <StocktakeTable
+                    title="PRODUCT"
+                    rows={productCodeRows}
+                    onChange={updateProductComponent}
+                />
 
-                <table className="physical-stock-table">
-
-                    <thead>
-
-                        <tr>
-                            <th colSpan="2">
-                                PACKAGING
-                            </th>
-
-                            <th colSpan="6">
-                                ROOM COUNT
-                            </th>
-
-                            <th colSpan="3">
-                                OFFICE USE ONLY
-                            </th>
-                        </tr>
-
-                        <tr>
-                            <th>CODE</th>
-
-                            <th>
-                                DESCRIPTION
-                            </th>
-
-                            <th>
-                                BATCH NO.
-                            </th>
-
-                            <th>
-                                BEST BEFORE
-                            </th>
-
-                            <th>
-                                QTY / PALLET
-                            </th>
-
-                            <th>
-                                QTY IN ROOM
-                            </th>
-
-                            <th>
-                                BOXES
-                            </th>
-
-                            <th>
-                                SINGLES
-                            </th>
-
-                            <th>
-                                ROOM
-                            </th>
-
-                            <th>
-                                WAREHOUSE
-                            </th>
-
-                            <th>
-                                TOTAL
-                            </th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {components.length > 0 ? (
-
-                            components.map(
-                                (component, index) => (
-
-                                    <tr
-                                        key={
-                                            component.id
-                                        }
-                                    >
-
-                                        {/* CODE */}
-
-                                        <td>
-                                            {
-                                                component.component_sku
-                                            }
-                                        </td>
-
-                                        {/* DESCRIPTION */}
-
-                                        <td>
-                                            {
-                                                component.component_name
-                                            }
-                                        </td>
-
-                                        {/* BATCH */}
-
-                                        <td>
-                                            <input
-                                                value={
-                                                    component.batchNo
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "batchNo",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        {/* BEST BEFORE */}
-
-                                        <td>
-                                            <input
-                                                // type="date"
-                                                value={
-                                                    component.bestBefore
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "bestBefore",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        {/* QTY / PALLET */}
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={
-                                                    component.qtyPerPallet
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "qtyPerPallet",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        {/* QTY IN ROOM */}
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={
-                                                    component.qtyInRoom
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "qtyInRoom",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        {/* BOXES */}
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={
-                                                    component.boxes
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "boxes",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        {/* SINGLES */}
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={
-                                                    component.singles
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "singles",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        {/* ROOM */}
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={
-                                                    component.room
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "room",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        {/* WAREHOUSE */}
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={
-                                                    component.warehouse
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "warehouse",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        {/* TOTAL */}
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={
-                                                    component.total
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
-                                                    updateComponent(
-                                                        index,
-                                                        "total",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                    </tr>
-                                )
-                            )
-
-                        ) : (
-
-                            <tr>
-                                <td colSpan="11">
-                                    No components found
-                                </td>
-                            </tr>
-
-                        )}
-                    {/* EXTRA MANUAL ROWS */}
-                        {Array.from({ length: 5 }).map((_, index) => (
-                            <tr key={`manual-${index}`}>
-
-                                <td>
-                                    <input />
-                                </td>
-
-                                <td>
-                                    <input />
-                                </td>
-
-                                <td>
-                                    <input />
-                                </td>
-
-                                <td>
-                                    <input />
-                                </td>
-
-                                <td>
-                                    <input type="number" />
-                                </td>
-
-                                <td>
-                                    <input type="number" />
-                                </td>
-
-                                <td>
-                                    <input type="number" />
-                                </td>
-
-                                <td>
-                                    <input type="number" />
-                                </td>
-
-                                <td>
-                                    <input type="number" />
-                                </td>
-
-                                <td>
-                                    <input type="number" />
-                                </td>
-
-                                <td>
-                                    <input type="number" />
-                                </td>
-
-                            </tr>
-                        ))}
-                    </tbody>
-
-                </table>
+                <StocktakeTable
+                    title="PACKAGING"
+                    rows={packagingComponents}
+                    onChange={updatePackagingComponent}
+                />
 
             </div>
 

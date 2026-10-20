@@ -3,7 +3,7 @@
 ================================================== */
 
 .reject-page {
-    width: 210mm;
+    width: min(100%, 210mm);
     min-height: 297mm;
     margin: 0 auto;
     padding: 12mm;
@@ -13,6 +13,18 @@
 
     font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+@media screen and (max-width: 900px) {
+    .reject-page {
+        min-height: 0;
+        padding: clamp(12px, 3vw, 28px);
+    }
+
+    .reject-header {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 /* ==================================================
@@ -181,6 +193,10 @@
     box-sizing: border-box;
 }
 
+.header-box input:focus {
+    box-shadow: inset 0 -1px #000;
+}
+
 /* ==================================================
    NOTES
 ================================================== */
@@ -301,6 +317,26 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
+.reject-table textarea,
+.manual-reject-product textarea {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    border: 0;
+    outline: 0;
+    resize: none;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    background: transparent;
+    padding: 2px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    line-height: normal;
+    box-sizing: border-box;
+    field-sizing: content;
+}
+
 .reject-table input[type="number"] {
     text-align: center;
 }
@@ -368,10 +404,11 @@
     box-sizing: border-box;
 }
 
-.manual-reject-product input {
+.manual-reject-product input,
+.manual-reject-product textarea {
     width: 100%;
 
-    height: 50%;
+    height: auto;
 
     border: none;
 
@@ -447,6 +484,71 @@
 }
 
 @media print {
+
+    .reject-page {
+        width: 100%;
+        min-height: 0;
+        padding: 0;
+        font-size: 10px;
+    }
+
+    .reject-title {
+        margin-bottom: 6px;
+        font-size: 18pt;
+    }
+
+    .reject-header {
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .header-box > div,
+    .header-value,
+    .product-name,
+    .header-box input {
+        min-height: 36px;
+        padding: 4px;
+    }
+
+    .reject-note {
+        margin-bottom: 6px;
+        font-size: 9px;
+    }
+
+    .reject-section {
+        margin-bottom: 8px;
+        break-inside: avoid;
+    }
+
+    .section-title {
+        padding: 4px;
+        font-size: 10px;
+    }
+
+    .reject-table th,
+    .reject-table td {
+        padding: 1px;
+        font-size: 9px;
+    }
+
+    .reject-table tbody tr {
+        min-height: 22px;
+        height: 22px;
+    }
+
+    .reject-table tbody tr:has(.reject-product) {
+        min-height: 32px;
+        height: auto;
+    }
+
+    .reject-product {
+        padding: 1px;
+    }
+
+    .reject-product strong,
+    .reject-product span {
+        font-size: 8px;
+    }
 
     body {
         margin: 0;

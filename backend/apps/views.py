@@ -332,6 +332,7 @@ def workpack_data(request):
         )
 
     return Response({
+        "issue": workpack.product.issue,
         "worksheet": workpack.worksheet_data,
         "traceability": workpack.traceability_data,
         "reject_report": workpack.reject_report_data,
@@ -507,6 +508,8 @@ def worksheet_data(request):
 
         "sku": product.sku,
 
+        "issue": product.issue,
+
         "transaction": product.get_transaction_display(),
 
         "pallet_configuration": product.pallet_configuration,
@@ -620,6 +623,8 @@ def reject_report_data(request):
 
         "sku": product.sku,
 
+        "issue": product.issue,
+
         "date": report_date,
 
         "components": component_data,
@@ -699,6 +704,8 @@ def checksheet_data(request):
         "product": product.name,
 
         "sku": product.sku,
+
+        "issue": product.issue,
 
         "date": report_date,
 
@@ -804,6 +811,7 @@ def stocktake_data(request):
         "customer": product.customer.company_name,
         "product": product.name,
         "sku": product.sku,
+        "issue": product.issue,
         "date": report_date,
         "components": component_data,
     })
@@ -950,6 +958,8 @@ class ProductViewSet(viewsets.ModelViewSet):
                     name=name,
                     description="",
                     date_set_up=timezone.now().date(),
+                    issue="Issue 1",
+                    issue_date=timezone.localdate(),
                     transaction=extracted.get("transaction", ""),
                     inner_barcode=extracted.get(
                         "inner_barcode",
@@ -1448,6 +1458,8 @@ def traceability_data(request):
         "product": product.name,
 
         "sku": product.sku,
+
+        "issue": product.issue,
 
         "date": report_date,
 
