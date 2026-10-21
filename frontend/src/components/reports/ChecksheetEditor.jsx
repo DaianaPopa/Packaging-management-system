@@ -61,6 +61,7 @@ function ChecksheetEditor() {
                 product: data.product || "",
                 sku: data.sku || "",
                 issue: data.issue || "",
+                issueDate: data.issue_date || "",
                 date: "",
 
                 time1: "",

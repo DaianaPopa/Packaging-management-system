@@ -332,7 +332,8 @@ def workpack_data(request):
         )
 
     return Response({
-        "issue": workpack.product.issue,
+        "issue": workpack.product.display_issue,
+        "issue_date": workpack.product.display_issue_date,
         "worksheet": workpack.worksheet_data,
         "traceability": workpack.traceability_data,
         "reject_report": workpack.reject_report_data,
@@ -508,7 +509,8 @@ def worksheet_data(request):
 
         "sku": product.sku,
 
-        "issue": product.issue,
+        "issue": product.display_issue,
+        "issue_date": product.display_issue_date,
 
         "transaction": product.get_transaction_display(),
 
@@ -623,7 +625,8 @@ def reject_report_data(request):
 
         "sku": product.sku,
 
-        "issue": product.issue,
+        "issue": product.display_issue,
+        "issue_date": product.display_issue_date,
 
         "date": report_date,
 
@@ -705,7 +708,8 @@ def checksheet_data(request):
 
         "sku": product.sku,
 
-        "issue": product.issue,
+        "issue": product.display_issue,
+        "issue_date": product.display_issue_date,
 
         "date": report_date,
 
@@ -811,7 +815,8 @@ def stocktake_data(request):
         "customer": product.customer.company_name,
         "product": product.name,
         "sku": product.sku,
-        "issue": product.issue,
+        "issue": product.display_issue,
+        "issue_date": product.display_issue_date,
         "date": report_date,
         "components": component_data,
     })
@@ -1459,7 +1464,8 @@ def traceability_data(request):
 
         "sku": product.sku,
 
-        "issue": product.issue,
+        "issue": product.display_issue,
+        "issue_date": product.display_issue_date,
 
         "date": report_date,
 

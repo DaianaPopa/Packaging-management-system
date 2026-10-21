@@ -65,6 +65,7 @@ function WorksheetEditor() {
                 customer: data.customer || "",
                 sku: data.sku || "",
                 issue: data.issue || "",
+                issueDate: data.issue_date || "",
                 pallet_configuration:
                     data.pallet_configuration || "",
                 product: data.product || "",

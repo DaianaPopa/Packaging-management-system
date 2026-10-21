@@ -27,8 +27,8 @@ function ProductDetail() {
     suspendRecord: false,
     palletisationStatistics: "",
     transaction: "",
-    issue: "",
-    issueDate: "",
+    issue: "Issue 1",
+    issueDate: new Date().toISOString().split("T")[0],
     packingProcess: [],
     components: [],
     packings: [],
@@ -58,8 +58,8 @@ function ProductDetail() {
           outerBarcode: product.outer_barcode || "",
           transaction: product.transaction || "",
           palletisationStatistics: product.pallet_configuration || "",
-          issue: product.issue || "",
-          issueDate: product.issue_date || "",
+          issue: product.issue || "Issue 1",
+          issueDate: product.issue_date || product.date_set_up || "",
           dateSetUp: product.date_set_up || "",
           suspendRecord: Boolean(product.suspend_record),
 
@@ -128,6 +128,8 @@ function ProductDetail() {
       transaction: formData.transaction,
       pallet_configuration: formData.palletisationStatistics,
       date_set_up: formData.dateSetUp,
+      issue: formData.issue,
+      issue_date: formData.issueDate || null,
       suspend_record: Boolean(formData.suspendRecord),
       inner_barcode: formData.innerBarcode || "",
       outer_barcode: formData.outerBarcode || "",
@@ -413,7 +415,10 @@ function ProductDetail() {
 
         <input
           value={formData.issue}
-          disabled
+          disabled={!isEditing}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, issue: e.target.value }))
+          }
         />
       </div>
 
@@ -423,7 +428,10 @@ function ProductDetail() {
         <input
           type="date"
           value={formData.issueDate}
-          disabled
+          disabled={!isEditing}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, issueDate: e.target.value }))
+          }
         />
       </div>
 

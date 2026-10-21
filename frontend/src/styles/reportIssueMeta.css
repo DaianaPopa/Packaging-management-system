@@ -1,5 +1,6 @@
 .report-issue-meta {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-start;
     gap: 8mm;
     margin: 0 0 10px;
@@ -7,6 +8,7 @@
     font-size: 9pt;
     font-weight: bold;
     text-align: left;
+    line-height: 1.5;
 }
 
 .report-issue-meta input {

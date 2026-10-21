@@ -40,6 +40,7 @@ function RejectReportEditor() {
         product: "",
         sku: "",
         issue: "",
+        issueDate: "",
         date: "",
     });
 
@@ -125,6 +126,7 @@ function RejectReportEditor() {
                 product: data.product || "",
                 sku: data.sku || "",
                 issue: data.issue || "",
+                issueDate: data.issue_date || "",
                 date: "",
             });
 

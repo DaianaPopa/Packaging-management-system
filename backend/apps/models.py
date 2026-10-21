@@ -107,6 +107,14 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def display_issue(self):
+        return self.issue.strip() or "Issue 1"
+
+    @property
+    def display_issue_date(self):
+        return self.issue_date or self.date_set_up or self.created_at.date()
+
 
     def __str__(self):
         return f"{self.sku} - {self.name}"

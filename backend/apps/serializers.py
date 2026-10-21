@@ -159,6 +159,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation["issue"] = instance.display_issue
+        representation["issue_date"] = instance.display_issue_date
         representation["components"] = self.get_components(instance)
         representation["packing_process"] = self.get_packing_process(instance)
         return representation
@@ -166,14 +168,27 @@ class ProductSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         components = validated_data.pop("components", None)
         packing_process = validated_data.pop("packing_process", None)
-        validated_data.pop("issue", None)
-        validated_data.pop("issue_date", None)
+        issue_was_submitted = "issue" in validated_data
+        issue_date_was_submitted = "issue_date" in validated_data
+        issue = validated_data.pop("issue", None)
+        issue_date = validated_data.pop("issue_date", None)
 
-        match = re.search(r"(\d+)$", instance.issue or "")
-        next_issue = int(match.group(1)) + 1 if match else 1
-        prefix = (instance.issue[:match.start()] if match else "Issue ").strip()
-        instance.issue = f"{prefix} {next_issue}".strip()
-        instance.issue_date = timezone.localdate()
+        issue_changed = issue_was_submitted and issue != instance.issue
+        issue_date_changed = (
+            issue_date_was_submitted and issue_date != instance.issue_date
+        )
+
+        if issue_changed or issue_date_changed:
+            if issue_was_submitted:
+                instance.issue = issue
+            if issue_date_was_submitted:
+                instance.issue_date = issue_date
+        else:
+            match = re.search(r"(\d+)$", instance.issue or "")
+            next_issue = int(match.group(1)) + 1 if match else 1
+            prefix = (instance.issue[:match.start()] if match else "Issue ").strip()
+            instance.issue = f"{prefix} {next_issue}".strip()
+            instance.issue_date = timezone.localdate()
 
         product = super().update(instance, validated_data)
 
@@ -200,8 +215,10 @@ class ProductSerializer(serializers.ModelSerializer):
         return product
 
     def create(self, validated_data):
-        validated_data["issue"] = "Issue 1"
-        validated_data["issue_date"] = timezone.localdate()
+        if not validated_data.get("issue"):
+            validated_data["issue"] = "Issue 1"
+        if not validated_data.get("issue_date"):
+            validated_data["issue_date"] = timezone.localdate()
         return super().create(validated_data)
 
     class Meta:

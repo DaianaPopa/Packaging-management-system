@@ -44,6 +44,7 @@ function TraceabilityEditor() {
             product: "",
             sku: "",
             issue: "",
+            issueDate: "",
             date: "",
             processOrder: "",
             outgoingBatchCode: "",
@@ -130,6 +131,9 @@ function TraceabilityEditor() {
 
                 issue:
                     data.issue || "",
+
+                issueDate:
+                    data.issue_date || "",
 
                 date: "",
 
