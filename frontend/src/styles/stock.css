@@ -193,7 +193,7 @@
 
 .physical-stock-table th:nth-child(2),
 .physical-stock-table td:nth-child(2) {
-    width: 24%;
+    width: 18%;
 }
 
 .physical-stock-table th:nth-child(3),
@@ -233,7 +233,7 @@
 
 .physical-stock-table th:nth-child(10),
 .physical-stock-table td:nth-child(10) {
-    width: 7.4%;
+    width: 13%;
 }
 
 .physical-stock-table th:nth-child(11),
@@ -285,7 +285,7 @@
 
 @page {
     size: A4 landscape;
-    margin: 5mm;
+    margin: 10mm;
 }
 
 @media print {
@@ -303,7 +303,11 @@
 
     .physical-stock-table thead tr:nth-child(2) th {
         height: 16mm;
-        font-size: 8pt;
+        font-size: 9pt;
+    }
+
+    .physical-stock-table th {
+        font-weight: 700;
     }
 
     body * {
@@ -316,14 +320,11 @@
     }
 
     #print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-
-        width: 297mm;
-        height: 210mm;
-
-        padding: 5mm;
+        position: static;
+        width: 100%;
+        height: auto;
+        min-height: 190mm;
+        padding: 0;
         margin: 0;
     }
 

@@ -156,11 +156,13 @@ function ChecksheetEditor() {
                 }
 
                 #print-area {
-                    width: 100% !important;
-                    height: auto !important;
-                    min-height: auto !important;
+                    width: 194mm !important;
+                    height: 281mm !important;
+                    min-height: 281mm !important;
                     margin: 0 !important;
-                    padding: 0 !important;
+                    padding: 5mm !important;
+                    display: flex !important;
+                    flex-direction: column !important;
                     box-shadow: none !important;
                     page-break-after: auto !important;
                 }

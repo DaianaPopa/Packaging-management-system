@@ -240,6 +240,12 @@
     .worksheet-header td {
         height: 9mm;
         padding: 2px 4px;
+        font-size: 10pt;
+    }
+
+    .worksheet-header th,
+    .pallet-table th {
+        font-weight: 700;
     }
 
     .worksheet-content {
@@ -254,14 +260,14 @@
     .job-row {
         min-height: 9mm;
         padding: 3px;
-        font-size: 9pt;
+        font-size: 10pt;
     }
 
     .pallet-table th,
     .pallet-table td {
         height: 7mm;
         padding: 1.5mm;
-        font-size: 9pt;
+        font-size: 10pt;
     }
 
     .worksheet-footer {

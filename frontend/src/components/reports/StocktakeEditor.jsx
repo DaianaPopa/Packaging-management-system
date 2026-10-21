@@ -201,8 +201,8 @@ function StocktakeEditor() {
             stocktakeRef.current?.style.zoom;
 
         if (stocktakeRef.current) {
-            const printableWidth = (281 * 96) / 25.4;
-            const printableHeight = (194 * 96) / 25.4;
+            const printableWidth = (277 * 96) / 25.4;
+            const printableHeight = (190 * 96) / 25.4;
             const contentWidth = stocktakeRef.current.scrollWidth;
             const contentHeight = stocktakeRef.current.scrollHeight;
             const scale = Math.min(
@@ -227,7 +227,7 @@ function StocktakeEditor() {
         printStyle.innerHTML = `
             @page {
                 size: A4 landscape;
-                margin: 8mm;
+                margin: 10mm;
             }
 
             @media print {
@@ -239,9 +239,11 @@ function StocktakeEditor() {
 
                 #print-area {
                     width: 100% !important;
+                    height: auto !important;
                     min-height: auto !important;
                     margin: 0 !important;
                     padding: 0 !important;
+                    position: static !important;
                     box-shadow: none !important;
                 }
 

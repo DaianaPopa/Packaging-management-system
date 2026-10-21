@@ -102,7 +102,6 @@ function PrintWorkpack() {
             (_, index) => ({ id: `blank-product-${index}`, isPlaceholder: true })
         ),
     ];
-
     return (
         <div className="print-workpack">
 
@@ -447,28 +446,15 @@ function PrintWorkpack() {
                             )
                         )}
 
-                        {/* Empty rows if nothing saved */}
                         {(!traceability.rows ||
                             traceability.rows.length === 0) &&
-                            Array.from({
-                                length: 7,
-                            }).map((_, index) => (
+                            Array.from({ length: 7 }).map((_, index) => (
                                 <tr key={index}>
-
                                     <td></td>
-
                                     <td></td>
-
-                                        {traceabilityProductSlots.map(
-                                            (component) => (
-                                                <td
-                                                    key={
-                                                        component.id
-                                                    }
-                                                ></td>
-                                            )
-                                        )}
-
+                                    {traceabilityProductSlots.map((component) => (
+                                        <td key={component.id}></td>
+                                    ))}
                                 </tr>
                             ))}
 

@@ -449,6 +449,20 @@
         box-sizing: border-box;
     }
 
+    .traceability-table th,
+    .traceability-table td {
+        font-size: 10pt;
+    }
+
+    .traceability-table thead th {
+        font-size: 10pt;
+        font-weight: 700;
+    }
+
+    .traceability-header {
+        font-size: 10pt;
+    }
+
 
     .worksheet-buttons,
     .traceability-buttons,

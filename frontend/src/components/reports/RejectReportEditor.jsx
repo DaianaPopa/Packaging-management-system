@@ -352,7 +352,7 @@ function RejectReportEditor() {
         printStyle.innerHTML = `
             @page {
                 size: A4 portrait !important;
-                margin: 8mm;
+                margin: 12mm;
             }
 
             @media print {
@@ -368,6 +368,7 @@ function RejectReportEditor() {
                     min-height: auto !important;
                     margin: 0 !important;
                     padding: 0 !important;
+                    position: static !important;
                     box-shadow: none !important;
                 }
 
@@ -697,6 +698,7 @@ function RejectReportEditor() {
                                         key={
                                             row.id
                                         }
+                                        className={row.type === "manual" ? "reject-manual-row" : ""}
                                     >
 
                                         {/* CODE / DESCRIPTION */}
@@ -912,6 +914,7 @@ function RejectReportEditor() {
                                         key={
                                             row.id
                                         }
+                                        className={row.type === "manual" ? "reject-manual-row" : ""}
                                     >
 
                                         {/* CODE / DESCRIPTION */}

@@ -33,7 +33,7 @@
         width: 100%;
     }
 
-    .header-box.date {
+    .datecoding-page .header-box.date {
         width: min(170px, 100%);
     }
 }
@@ -55,21 +55,21 @@
     margin-bottom: 12px;
 }
 
-.header-box {
+.datecoding-page .header-box {
     border: 1px solid #000;
     display: flex;
     flex-direction: column;
 }
 
-.header-box.product {
+.datecoding-page .header-box.product {
    flex: 1;
 }
 
-.header-box.date {
+.datecoding-page .header-box.date {
     width: 170px;
 }
 
-.header-box label {
+.datecoding-page .header-box label {
     border-bottom: 1px solid #000;
     font-size: 12px;
     padding: 4px 5px;
@@ -77,8 +77,8 @@
     line-height: 1.3;
 }
 
-.header-box div,
-.header-box input {
+.datecoding-page .header-box div,
+.datecoding-page .header-box input {
     min-height: 30px;
     border: none;
     padding: 5px 4px;
@@ -87,7 +87,7 @@
     line-height: 1.4;
 }
 
-.header-box input {
+.datecoding-page .header-box input {
     width: 100%;
 }
 
@@ -301,7 +301,7 @@
         font-size: 11pt;
     }
 
-    .header-box label,
+    .datecoding-page .header-box label,
     .instruction-text,
     .change-note,
     .ccp-note,

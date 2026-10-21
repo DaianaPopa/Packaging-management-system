@@ -506,38 +506,45 @@
     .header-value,
     .product-name,
     .header-box input {
-        min-height: 36px;
-        padding: 4px;
+        min-height: 7mm;
+        padding: 1mm 2mm;
     }
 
     .reject-note {
-        margin-bottom: 6px;
-        font-size: 9px;
+        margin-bottom: 3mm;
+        font-size: 9pt;
     }
 
     .reject-section {
-        margin-bottom: 8px;
-        break-inside: avoid;
+        margin-bottom: 3mm;
     }
 
     .section-title {
-        padding: 4px;
-        font-size: 10px;
+        padding: 1mm;
+        font-size: 9pt;
     }
 
     .reject-table th,
     .reject-table td {
-        padding: 1.5mm;
-        font-size: 10pt;
+        padding: 0.8mm 1mm;
+        font-size: 9pt;
+    }
+
+    .reject-table th {
+        font-weight: 700;
     }
 
     .reject-table tbody td {
-        height: 8mm;
+        height: 6mm;
     }
 
     .reject-table tbody tr:has(.reject-product) {
-        min-height: 8mm;
+        min-height: 6mm;
         height: auto;
+    }
+
+    .reject-table tbody tr.reject-manual-row ~ tr.reject-manual-row {
+        display: none;
     }
 
     .reject-product {
@@ -564,18 +571,11 @@
     }
 
     #print-area {
-        position: absolute;
-
-        left: 0;
-        top: 0;
-
-        width: 210mm;
-
-        min-height: 297mm;
-
+        position: static;
+        width: 100%;
+        min-height: 273mm;
         margin: 0;
-
-        padding: 12mm;
+        padding: 0;
 
         box-sizing: border-box;
 
