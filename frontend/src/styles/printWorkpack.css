@@ -1,6 +1,6 @@
 /* =========================================================
-   PRINT WORKPACK
-   EVERYTHING IS PHYSICALLY A4 LANDSCAPE
+    PRINT WORKPACK
+    EACH REPORT USES A4 PORTRAIT
 ========================================================= */
 
 .print-workpack {
@@ -10,96 +10,252 @@
     color: #000;
     font-family: Arial, Helvetica, sans-serif;}
 
-/* =========================================================
-   EVERY REPORT = ONE LANDSCAPE A4 PAGE
-========================================================= */
-
-.print-page {
-    width: 297mm;
-    height: 210mm;
-
-    position: relative;
-
-    box-sizing: border-box;
-
-    background: white;
-
-    overflow: hidden;
-
-    page-break-after: always;
-    break-after: page;
+@media screen {
+    .print-workpack {
+        position: fixed;
+        left: -10000px;
+        top: 0;
+        width: 194mm;
+    }
 }
 
+.print-controls {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 1100px;
+    margin: 0 auto 16px;
+}
 
-/* =========================================================
-   LANDSCAPE REPORT
-========================================================= */
+.print-controls button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 4px;
+    background: #176b5b;
+    color: white;
+    font: inherit;
+    cursor: pointer;
+}
 
-.landscape-report {
-    width: 297mm;
-    height: 210mm;
-
+.workpack-page {
+    width: min(100%, 1100px);
+    min-height: 620px;
+    margin: 0 auto 24px;
+    padding: 28px;
+    background: #fff;
+    color: #000;
     box-sizing: border-box;
+}
 
+.workpack-page > h1 {
+    margin: 0 0 12px;
+    font-size: 24px;
+}
+
+.workpack-page .report-header {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 12px 0 18px;
+    padding: 10px 0;
+    border-top: 1px solid #777;
+    border-bottom: 1px solid #777;
+}
+
+.print-workpack .workpack-landscape-content.traceability-page {
+    width: 100%;
+    min-height: 0;
+    margin: 0;
     padding: 8mm;
-}
-
-
-/* =========================================================
-   PORTRAIT REPORT ROTATED 90°
-   
-   Original report:
-       210mm x 297mm
-
-   Physical print page:
-       297mm x 210mm
-
-   We rotate the portrait report inside
-   the landscape sheet.
-========================================================= */
-
-.rotated-portrait {
-    position: absolute;
-
-    width: 210mm;
-    height: 297mm;
-
-    left: 50%;
-    top: 50%;
-
-    transform:
-        translate(-50%, -50%)
-        rotate(90deg);
-
-    transform-origin: center center;
-
+    overflow: visible;
+    background: #fff;
     box-sizing: border-box;
-
-    overflow: hidden;
 }
 
+.print-workpack .traceability-page .traceability-title {
+    margin: 0 0 4mm;
+    padding-bottom: 3mm;
+    border-bottom: 1px solid #777;
+    font-size: 18pt;
+    text-align: left;
+}
 
-/* =========================================================
-   PORTRAIT REPORT CONTENT
-========================================================= */
+.print-workpack .traceability-page .report-issue-meta {
+    margin-bottom: 4mm;
+    font-size: 9pt;
+}
 
-.rotated-portrait .worksheet,
-.rotated-portrait .portrait-report {
+.print-workpack .traceability-page .traceability-header {
+    gap: 8mm;
+    margin-bottom: 4mm;
+    padding: 3mm;
+    border: 1px solid #777;
+    background: #f7f8f8;
+    font-size: 9pt;
+    line-height: 1.35;
+}
 
-    width: 210mm;
-    min-height: 297mm;
+.print-workpack .traceability-page .traceability-header-left,
+.print-workpack .traceability-page .traceability-header-right {
+    gap: 2mm;
+}
 
+.print-workpack .traceability-page .traceability-table {
+    margin-top: 3mm;
+}
+
+.print-workpack .traceability-page .traceability-table thead th {
+    background: #e9edef;
+    line-height: 1.2;
+}
+
+.print-workpack .traceability-page .traceability-table thead tr:first-child th[colspan] {
+    background: #dce3e6;
+    font-size: 10pt;
+}
+
+.print-workpack .traceability-page .traceability-table thead tr:nth-child(2) th {
+    padding: 2mm 1mm;
+}
+
+.print-workpack .traceability-page .traceability-table thead small {
+    display: inline-block;
+    margin-top: 1mm;
+    font-size: 8pt;
+    font-weight: 400;
+}
+
+.print-workpack .traceability-page .traceability-table tbody tr:nth-child(even) {
+    background: #f6f7f7;
+}
+
+.print-workpack .traceability-page .traceability-table tbody td {
+    height: 12mm;
+    padding: 1.5mm;
+    font-size: 9pt;
+}
+
+.print-workpack .traceability-page .traceability-table tbody td:nth-child(2n + 3) {
+    border-left-width: 1.5px;
+}
+
+.print-workpack .traceability-page .traceability-table tbody td.traceability-qty-column {
+    background: #eef2f3;
+    font-weight: 700;
+}
+
+.workpack-reject-note,
+.workpack-coding-instructions {
+    margin: 0 0 14px;
+    line-height: 1.4;
+}
+
+.workpack-reject-section {
+    margin-top: 14px;
+}
+
+.workpack-reject-section h2 {
+    margin: 0;
+    padding: 6px 8px;
+    background: #e8eef0;
+    font-size: 13px;
+}
+
+.workpack-reject-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.workpack-reject-table th,
+.workpack-reject-table td {
+    border: 1px solid #555;
+    padding: 6px;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.workpack-reject-table th {
+    background: #f3f5f5;
+    font-size: 12px;
+}
+
+.workpack-reject-table td {
+    min-height: 24px;
+    font-size: 11px;
+}
+
+.workpack-reject-table td:first-child strong,
+.workpack-reject-table td:first-child span {
+    display: block;
+}
+
+.workpack-coding-check {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0;
+}
+
+.workpack-coding-image {
+    display: flex;
+    min-height: 145px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #555;
     box-sizing: border-box;
-
-    padding: 8mm;
-
-    background: white;
-
-    color: black;
-
-    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
 }
 
+.workpack-coding-image img {
+    display: block;
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+}
+
+.workpack-coding-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.workpack-coding-time,
+.workpack-coding-images {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.workpack-coding-time span {
+    padding: 8px;
+    border: 1px solid #777;
+}
+
+.workpack-coding-images .workpack-coding-image {
+    min-height: 110px;
+}
+
+@media screen and (max-width: 760px) {
+    .workpack-page {
+        min-height: 0;
+        padding: 16px;
+    }
+
+    .workpack-page .report-header {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .workpack-coding-check {
+        grid-template-columns: 1fr;
+    }
+}
 
 /* =========================================================
    PRINT ONLY
@@ -108,8 +264,8 @@
 @media print {
 
     @page {
-        size: A4 landscape;
-        margin: 0;
+        size: A4 portrait;
+        margin: 8mm;
     }
 
     html,
@@ -126,24 +282,353 @@
     }
 
     .print-workpack {
-        width: 297mm;
+        width: 194mm;
     }
 
-    .print-page {
-        width: 297mm;
-        height: 210mm;
+    #print-area {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        display: block !important;
+        width: 194mm !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .print-controls {
+        display: none !important;
+    }
+
+    .workpack-page {
+        width: 194mm;
+        min-height: 281mm;
+        box-sizing: border-box;
 
         margin: 0;
 
-        padding: 0;
+        padding: 5mm;
 
         page-break-after: always;
         break-after: page;
 
+        overflow: visible;
+    }
+
+    .workpack-page.worksheet-print-page {
+        height: 281mm;
+    }
+
+    .workpack-page > h1 {
+        font-size: 16pt;
+    }
+
+    .reject-page {
+        width: 194mm;
+        min-height: 281mm;
+        padding: 0;
+    }
+
+    .datecoding-page {
+        display: flex;
+        flex-direction: column;
+        width: 194mm;
+        height: 281mm;
+        min-height: 281mm;
+        padding: 0;
+    }
+
+    .coding-section {
+        flex: 1 1 0;
+        min-height: 0;
+        margin-bottom: 10px;
+    }
+
+    .change-note {
+        flex: 0 0 auto;
+    }
+
+    .outer-coding-box {
+        height: auto;
+        min-height: 0;
+    }
+
+    .product-coding-box {
+        height: 22mm;
+        flex: 0 0 auto;
+    }
+
+    .evidence-box {
+        height: 36mm;
+    }
+
+    .datecoding-page .header-box label,
+    .instruction-text,
+    .change-note,
+    .ccp-note,
+    .time-box label {
+        font-size: 10pt;
+    }
+
+    .print-workpack .traceability-page {
+        width: 194mm;
+        height: 281mm;
+        min-height: 281mm;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .print-workpack .traceability-table th,
+    .print-workpack .traceability-table td {
+        padding: 1mm 0.5mm;
+        font-size: 6.5pt;
+        overflow-wrap: anywhere;
+    }
+
+    .print-workpack .traceability-table th:first-child,
+    .print-workpack .traceability-table td:first-child,
+    .print-workpack .traceability-table th:nth-child(2),
+    .print-workpack .traceability-table td:nth-child(2) {
+        width: 12mm;
+    }
+
+    .print-workpack .traceability-table th.traceability-qty-column,
+    .print-workpack .traceability-table td.traceability-qty-column {
+        width: 8mm;
+        min-width: 8mm;
+        max-width: 8mm;
+    }
+
+    .print-workpack .stocktake-page {
+        width: 194mm;
+        height: 281mm;
+        min-height: 281mm;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .print-workpack .stocktake-top {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .print-workpack .physical-stock-table th,
+    .print-workpack .physical-stock-table td {
+        padding: 1mm 0.4mm;
+        font-size: 6pt;
+        line-height: 1.1;
+        overflow-wrap: anywhere;
+    }
+
+    .print-workpack .physical-stock-table tbody td {
+        height: 7mm;
+        padding: 1mm 0.4mm;
+    }
+
+    .print-workpack .physical-stock-table thead tr:nth-child(2) th {
+        height: 14mm;
+        font-size: 6pt;
+    }
+
+    .workpack-landscape-page {
+        position: relative;
+        width: 200mm;
+        height: 277mm;
+        min-height: 277mm;
+        box-sizing: border-box;
+        margin: 0 -3mm;
+        padding: 0;
+        overflow: hidden;
+        break-inside: avoid-page;
+        page-break-inside: avoid;
+        break-after: page;
+        page-break-after: always;
+    }
+
+    .workpack-landscape-content {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 277mm;
+        height: 216mm;
+        min-height: 216mm;
+        margin: 0;
+        padding: 6mm;
+        box-sizing: border-box;
+        overflow: visible;
+        transform: translate(-50%, -50%) rotate(90deg) scale(0.90);
+        transform-origin: center center;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content {
+        width: 306mm;
+        height: 214mm;
+        min-height: 214mm;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .print-workpack .traceability-page .traceability-title {
+        margin-bottom: 3mm;
+        padding-bottom: 2mm;
+        font-size: 15pt;
+    }
+
+    .print-workpack .traceability-page .report-issue-meta {
+        margin-bottom: 3mm;
+        font-size: 8pt;
+    }
+
+    .print-workpack .traceability-page .traceability-header {
+        gap: 4mm;
+        margin-bottom: 3mm;
+        padding: 2mm;
+        font-size: 8pt;
+    }
+
+    .traceability-page.workpack-landscape-content .traceability-table th,
+    .traceability-page.workpack-landscape-content .traceability-table td {
+        padding: 1mm;
+        font-size: 8pt;
+    }
+
+    .traceability-page.workpack-landscape-content .traceability-table thead tr:nth-child(2) th {
+        height: 14mm;
+        font-size: 8pt;
+    }
+
+    .traceability-page.workpack-landscape-content .traceability-table tbody tr,
+    .traceability-page.workpack-landscape-content .traceability-table tbody td {
+        height: 11mm;
+    }
+
+    .traceability-page.workpack-landscape-content .traceability-table tbody td {
+        font-size: 8.5pt;
+    }
+
+    .traceability-page.workpack-landscape-content .traceability-table {
+        break-inside: auto;
+        page-break-inside: auto;
+    }
+
+    .traceability-page.workpack-landscape-content .traceability-table thead small {
+        font-size: 7pt;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content {
+        display: block;
         overflow: hidden;
     }
 
-    .print-page:last-child {
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        align-items: start;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-header-left,
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-header-right {
+        width: auto;
+        min-width: 0;
+        gap: 1mm;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-header-left > div,
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-header-right > div {
+        min-height: 0;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table {
+        width: 100%;
+        margin-top: 2mm;
+        table-layout: fixed;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table thead tr:first-child th {
+        height: 7mm;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table thead tr:nth-child(2) th {
+        height: 12mm;
+        overflow: hidden;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table tbody tr,
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table tbody td {
+        height: 8mm;
+        padding: 0.5mm;
+        overflow: hidden;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table th:first-child,
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table td:first-child,
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table th:nth-child(2),
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table td:nth-child(2) {
+        width: 16mm;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table th.traceability-qty-column,
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table td.traceability-qty-column {
+        width: 14mm;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table th,
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table td {
+        font-size: 10pt;
+        line-height: 1.15;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table thead small {
+        font-size: 8.5pt;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table thead tr:nth-child(2) th {
+        height: 16mm;
+    }
+
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table tbody tr,
+    .print-workpack .traceability-page.workpack-landscape-content .traceability-table tbody td {
+        height: 10mm;
+    }
+
+    .print-workpack .stocktake-page.workpack-landscape-content {
+        width: 300mm;
+        height: 222mm;
+        min-height: 222mm;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .stocktake-page.workpack-landscape-content .stocktake-top {
+        grid-template-columns: 3fr 1.5fr 1.5fr 1.5fr;
+    }
+
+    .stocktake-page.workpack-landscape-content .physical-stock-table th,
+    .stocktake-page.workpack-landscape-content .physical-stock-table td {
+        padding: 1mm;
+        font-size: 8pt;
+    }
+
+    .print-workpack .stocktake-page.workpack-landscape-content .physical-stock-table tbody td {
+        height: 9mm;
+    }
+
+    .stocktake-page.workpack-landscape-content .physical-stock-table th:nth-child(1),
+    .stocktake-page.workpack-landscape-content .physical-stock-table td:nth-child(1) {
+        width: 8%;
+    }
+
+    .stocktake-page.workpack-landscape-content .physical-stock-table th:nth-child(2),
+    .stocktake-page.workpack-landscape-content .physical-stock-table td:nth-child(2) {
+        width: 18%;
+    }
+
+    .workpack-page:last-child {
         page-break-after: auto;
         break-after: auto;
     }

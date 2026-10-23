@@ -154,9 +154,9 @@ function JobProcessing() {
           />
 
           <button
-              onClick={() =>
-                  navigate(`/print-workpack?product=${product.id}`)
-              }
+            type="button"
+            disabled={!product}
+            onClick={handlePrintAll}
           >
               🖨 Print All
           </button>
@@ -182,6 +182,10 @@ function JobProcessing() {
       </div>
 
       <div className="report-grid">
+
+        <h3 className="report-grid-title">
+          Available reports ({reports.length})
+        </h3>
 
         {reports.map((report) => {
 

@@ -196,14 +196,9 @@ function WorksheetEditor() {
                 }
 
                 #print-area {
-                    width: 100% !important;
-                    height: 281mm !important;
-                    min-height: 281mm !important;
-                    padding: 5mm !important;
-                    overflow: hidden !important;
+                    width: 194mm !important;
                     margin: 0 !important;
                     box-shadow: none !important;
-                    page-break-after: auto !important;
                 }
 
                 input {

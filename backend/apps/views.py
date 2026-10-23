@@ -334,6 +334,13 @@ def workpack_data(request):
     return Response({
         "issue": workpack.product.display_issue,
         "issue_date": workpack.product.display_issue_date,
+        "product": {
+            "sku": workpack.product.sku,
+            "name": workpack.product.name,
+            "customer": workpack.product.customer.company_name,
+            "transaction": workpack.product.get_transaction_display(),
+            "pallet_configuration": workpack.product.pallet_configuration,
+        },
         "worksheet": workpack.worksheet_data,
         "traceability": workpack.traceability_data,
         "reject_report": workpack.reject_report_data,

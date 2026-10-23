@@ -206,79 +206,15 @@
         background: white;
     }
 
-    .worksheet-print-page {
-        display: flex;
-        flex-direction: column;
-        height: 210mm;
-        padding: 5mm;
-        box-sizing: border-box;
-    }
-
-    .worksheet {
-        width: 210mm;
-        height: 281mm;
-        min-height: 281mm;
-        display: flex;
-        flex-direction: column;
+    .worksheet,
+    #print-area.worksheet {
+        width: 194mm;
+        height: auto;
+        min-height: 0;
         margin: 0;
-        padding: 5mm;
-        overflow: hidden;
-        page-break-after: auto;
+        padding: 4mm;
+        overflow: visible;
         box-shadow: none;
-    }
-
-    .worksheet-title {
-        font-size: 16pt;
-        margin: 0 0 4mm;
-    }
-
-    .worksheet-header {
-        margin-bottom: 4mm;
-    }
-
-    .worksheet-header th,
-    .worksheet-header td {
-        height: 9mm;
-        padding: 2px 4px;
-        font-size: 10pt;
-    }
-
-    .worksheet-header th,
-    .pallet-table th {
-        font-weight: 700;
-    }
-
-    .worksheet-content {
-        gap: 5mm;
-    }
-
-    .job-title {
-        padding: 3px;
-        font-size: 10pt;
-    }
-
-    .job-row {
-        min-height: 9mm;
-        padding: 3px;
-        font-size: 10pt;
-    }
-
-    .pallet-table th,
-    .pallet-table td {
-        height: 7mm;
-        padding: 1.5mm;
-        font-size: 10pt;
-    }
-
-    .worksheet-footer {
-        width: 100%;
-        margin-top: auto;
-        display: grid;
-        grid-template-columns: 1fr;
-        row-gap: 0;
-        padding-top: 1mm;
-        position: relative;
-        top: -4mm;
     }
 
     .worksheet-issue-date {
@@ -286,28 +222,20 @@
         justify-content: flex-start;
         gap: 8mm;
         margin: 0 0 2mm;
-        text-align: left;
         font-size: 9pt;
         font-weight: bold;
     }
 
-    .worksheet-print-page .worksheet-footer {
-        flex: 0 0 auto;
+    .worksheet-content,
+    .job-description,
+    .pallet-table,
+    .worksheet-header {
+        break-inside: avoid;
     }
 
-    .footer-item {
-        margin-bottom: 2mm;
+    .worksheet-footer {
+        break-inside: avoid;
     }
-
-    .footer-item span {
-        width: 62%;
-        font-size: 9pt;
-    }
-
-    .signature-line {
-        height: 5mm;
-    }
-
     .worksheet-buttons,
     .no-print {
         display: none !important;
