@@ -50,8 +50,8 @@
 
     grid-template-columns:
         1fr
-        1.6fr
-        1fr
+        2.2fr
+        0.9fr
         1fr;
 
     gap: 10px;
@@ -147,12 +147,7 @@
 .product-name {
     width: 100%;
 
-    min-height: 60px;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
+    min-height: 72px;
 
     text-align: center;
 
@@ -167,6 +162,10 @@
     overflow-wrap: anywhere;
 
     word-break: break-word;
+    resize: vertical;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
 }
 
 /* ==================================================
@@ -508,6 +507,13 @@
     .header-box input {
         min-height: 7mm;
         padding: 1mm 2mm;
+    }
+
+    textarea.product-name {
+        min-height: 13mm;
+        height: 13mm;
+        resize: none;
+        font-size: 9pt;
     }
 
     .reject-note {

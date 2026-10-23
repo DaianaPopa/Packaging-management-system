@@ -592,7 +592,13 @@ function RejectReportEditor() {
                             Product
                         </label>
 
-                        <input className="header-value product-name" type="text" value={report.product} onChange={(e) => updateReport("product", e.target.value)} />
+                        <textarea
+                            className="header-value product-name"
+                            rows="2"
+                            value={report.product}
+                            onInput={(event) => resizeRejectText(event.currentTarget)}
+                            onChange={(event) => updateReport("product", event.target.value)}
+                        />
 
                     </div>
 
