@@ -4,7 +4,7 @@ from django.urls import path
 from .views import (worksheet_data, save_worksheet, reject_report_data, save_reject_report, checksheet_data,
                     save_checksheet, stocktake_data, save_stocktake, traceability_data, save_traceability, 
                     analytics_data,RegisterView, workpack_data, save_user_settings, current_user, admin_users,
-                    change_user_role, change_password)
+                    admin_user_activity, change_user_role, change_password)
 
 from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView,)
 
@@ -24,6 +24,11 @@ urlpatterns = router.urls + [
         "admin/users/<int:user_id>/role/",
         change_user_role,
         name="change-user-role"
+    ),
+    path(
+        "admin/users/<int:user_id>/activity/",
+        admin_user_activity,
+        name="admin-user-activity"
     ),
     path(
         "settings/save/",

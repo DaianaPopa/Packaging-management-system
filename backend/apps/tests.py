@@ -19,6 +19,7 @@ from .models import (
     Component,
     PackingProcessStep,
     Workpack,
+    UserActivity,
 )
 
 
@@ -1191,6 +1192,56 @@ class PackagingManagementSystemTests(APITestCase):
                 "role": "user"
             },
             format="json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_403_FORBIDDEN
+        )
+
+    # ---------------------------------------------------------
+
+    def test_34_admin_can_view_user_activity(self):
+
+        activity = UserActivity.objects.create(
+            user=self.user,
+            action="Signed in",
+            description="User signed in successfully"
+        )
+
+        self.client.force_authenticate(
+            user=self.admin
+        )
+
+        response = self.client.get(
+            reverse(
+                "admin-user-activity",
+                kwargs={"user_id": self.user.id}
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            response.data["activities"][0]["id"],
+            activity.id
+        )
+
+    # ---------------------------------------------------------
+
+    def test_35_normal_user_cannot_view_user_activity(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            reverse(
+                "admin-user-activity",
+                kwargs={"user_id": self.admin.id}
+            )
         )
 
         self.assertEqual(

@@ -226,6 +226,50 @@ def admin_users(request):
 
 
 # =====================================================
+# ADMIN - GET USER ACTIVITY
+# =====================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def admin_user_activity(request, user_id):
+
+    try:
+        profile = UserProfile.objects.get(
+            user=request.user
+        )
+    except UserProfile.DoesNotExist:
+        return Response(
+            {"error": "Profile not found"},
+            status=403
+        )
+
+    if profile.role != "admin":
+        return Response(
+            {"error": "Admin access required"},
+            status=403
+        )
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {"error": "User not found"},
+            status=404
+        )
+
+    activities = UserActivity.objects.filter(
+        user=user
+    ).values(
+        "id",
+        "action",
+        "description",
+        "created_at",
+    )
+
+    return Response({"activities": activities})
+
+
+# =====================================================
 # ADMIN - CHANGE ROLE
 # =====================================================
 

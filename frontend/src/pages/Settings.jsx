@@ -3,6 +3,53 @@ import { useEffect, useState } from "react";
 const API_URL =
     "https://daianapopa.pythonanywhere.com";
 
+async function fetchWithAuth(url, options = {}) {
+    const sendRequest = (token) =>
+        fetch(url, {
+            ...options,
+            headers: {
+                ...options.headers,
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+    const accessToken = localStorage.getItem("access");
+
+    if (!accessToken) {
+        window.location.assign("/login");
+        throw new Error("Please sign in again.");
+    }
+
+    const response = await sendRequest(accessToken);
+    if (response.status !== 401) {
+        return response;
+    }
+
+    const refreshToken = localStorage.getItem("refresh");
+    if (!refreshToken) {
+        localStorage.removeItem("access");
+        window.location.assign("/login");
+        return response;
+    }
+
+    const refreshResponse = await fetch(`${API_URL}/api/refresh/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh: refreshToken }),
+    });
+
+    if (!refreshResponse.ok) {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        window.location.assign("/login");
+        return response;
+    }
+
+    const refreshedTokens = await refreshResponse.json();
+    localStorage.setItem("access", refreshedTokens.access);
+    return sendRequest(refreshedTokens.access);
+}
+
 function Settings() {
 
     // =====================================================
@@ -57,95 +104,35 @@ function Settings() {
     // =====================================================
 
     useEffect(() => {
-
-        loadSettings();
-
-    }, []);
-
-
-    // =====================================================
-    // LOAD CURRENT USER
-    // =====================================================
-
-    async function loadSettings() {
-
-        const token =
-            localStorage.getItem("access");
-
-        if (!token) {
-
-            window.location.href =
-                "/login";
-
-            return;
-        }
-
-        try {
-
-            const response =
-                await fetch(
-                    `${API_URL}/api/me/`,
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
-                );
-
-            if (!response.ok) {
-
-                throw new Error(
-                    "Failed to load user"
-                );
-            }
-
-            const data =
-                await response.json();
-
-            setSettings({
-
-                username:
-                    data.username || "",
-
-                fullName:
-                    data.fullName || "",
-
-                email:
-                    data.email || "",
-
-                role:
-                    data.role || "",
-
-                currentPassword:
-                    "",
-
-                newPassword:
-                    "",
-
-                confirmPassword:
-                    "",
+        fetchWithAuth(`${API_URL}/api/me/`)
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to load user");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                setSettings({
+                    username: data.username || "",
+                    fullName: data.fullName || "",
+                    email: data.email || "",
+                    role: data.role || "",
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                });
+                if (data.role === "admin") {
+                    loadUsers();
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                alert("Failed to load settings.");
+            })
+            .finally(() => {
+                setLoading(false);
             });
-
-            // Load users only if current user is admin
-            if (data.role === "admin") {
-
-                loadUsers();
-            }
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "Failed to load settings."
-            );
-
-        } finally {
-
-            setLoading(false);
-        }
-    }
+    }, []);
 
 
     // =====================================================
@@ -153,55 +140,20 @@ function Settings() {
     // =====================================================
 
     async function loadUsers() {
-
-        const token =
-            localStorage.getItem("access");
-
-        if (!token) {
-            return;
-        }
-
         setLoadingUsers(true);
-
         try {
-
-            const response =
-                await fetch(
-                    `${API_URL}/api/admin/users/`,
-                    {
-                        method: "GET",
-
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
-                );
-
-            const data =
-                await response.json();
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.error ||
-                    "Failed to load users."
-                );
-            }
-
-            setUsers(data);
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                error.message ||
-                "Failed to load users."
+            const response = await fetchWithAuth(
+                `${API_URL}/api/admin/users/`
             );
-
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to load users.");
+            }
+            setUsers(data);
+        } catch (error) {
+            console.error(error);
+            alert(error.message || "Failed to load users.");
         } finally {
-
             setLoadingUsers(false);
         }
     }
@@ -574,7 +526,7 @@ function Settings() {
 
     function handleReset() {
 
-        loadSettings();
+        window.location.reload();
     }
 
 
